@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toolbox"
+version = "0.1.0"
+description = "A collection of small tools for day-to-day life"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+browser = [
+    "playwright",
+]
+test = [
+    "pytest",
+]
+
+[project.scripts]
+fb-strikethrough = "tools.fb_strikethrough.main:main"
+
+[tool.setuptools.packages.find]
+include = ["tools*"]

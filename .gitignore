@@ -3,3 +3,14 @@
 docs/plans/*
 !docs/plans/completed/
 !docs/plans/draft/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+*.egg-info/
+
+# Browser profiles
+.browser_profiles/
