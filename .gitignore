@@ -1,0 +1,5 @@
+# Ralphex
+.ralphex/
+docs/plans/*
+!docs/plans/completed/
+!docs/plans/draft/
