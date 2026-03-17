@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import html as html_module
 import json
 import sys
 from pathlib import Path
@@ -13,7 +14,7 @@ BROWSER_PROFILES_DIR = PROJECT_ROOT / ".browser_profiles"
 FB_PROFILE_DIR = BROWSER_PROFILES_DIR / "facebook"
 CONFIG_PATH = TOOL_DIR / "config" / "config.json"
 
-_SELECT_ALL = "Meta+a" if sys.platform == "darwin" else "Control+a"
+_PASTE = "Meta+v" if sys.platform == "darwin" else "Control+v"
 
 
 async def edit_post(url: str, *, _playwright_factory=None) -> None:
@@ -27,6 +28,7 @@ async def edit_post(url: str, *, _playwright_factory=None) -> None:
         context = await p.chromium.launch_persistent_context(
             user_data_dir=str(FB_PROFILE_DIR),
             headless=False,
+            permissions=["clipboard-read", "clipboard-write"],
         )
         try:
             page = context.pages[0] if context.pages else await context.new_page()
@@ -58,17 +60,7 @@ async def edit_post(url: str, *, _playwright_factory=None) -> None:
             await editor.wait_for(state="visible", timeout=10_000)
             await editor.click()
 
-            # First strip any existing Unicode strikethrough (U+0336) by
-            # replacing the text with a clean version
-            original_text = await editor.inner_text()
-            clean_text = strip_strikethrough(original_text)
-            if clean_text != original_text:
-                await page.keyboard.press(_SELECT_ALL)
-                await page.keyboard.press("Backspace")
-                await editor.fill(clean_text)
-
-            # Read text, strip any existing strikethrough, then re-paste
-            await page.keyboard.press(_SELECT_ALL)
+            # Read text and strip any existing Unicode strikethrough (U+0336)
             original_text = await editor.inner_text()
             clean_text = strip_strikethrough(original_text)
 
@@ -84,18 +76,21 @@ async def edit_post(url: str, *, _playwright_factory=None) -> None:
             html_parts = []
             for line in lines:
                 if marker is None or marker in line:
-                    html_parts.append("<s>" + line + "</s>")
+                    html_parts.append("<s>" + html_module.escape(line) + "</s>")
                 else:
-                    html_parts.append(line)
+                    html_parts.append(html_module.escape(line))
             html = "<br>".join(html_parts)
 
-            # Write HTML to clipboard and paste
+            # Select all existing text, then write HTML to clipboard and paste
+            _select_all = "Meta+a" if sys.platform == "darwin" else "Control+a"
+            await page.keyboard.press(_select_all)
+
             await page.evaluate("""async (html) => {
                 const blob = new Blob([html], {type: 'text/html'});
                 const item = new ClipboardItem({'text/html': blob});
                 await navigator.clipboard.write([item]);
             }""", html)
-            await page.keyboard.press("Control+v")
+            await page.keyboard.press(_PASTE)
 
             # Click Save
             await page.wait_for_timeout(1000)

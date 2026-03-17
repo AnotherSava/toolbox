@@ -36,8 +36,11 @@ Plans and documentation live inside each tool at `tools/<tool_name>/docs/`. This
 ## Adding a New Tool
 
 1. Create `tools/<name>/` with `src/`, `tst/`, and optionally `config/` subdirectories
-2. Add `__init__.py` in each subdirectory
-3. Add a console script entry point in `pyproject.toml` under `[project.scripts]`
+2. Add `__init__.py` in each subdirectory (including the tool root)
+3. In `pyproject.toml`:
+   - Add the package name to `[tool.setuptools] packages`
+   - Add the src mapping under `[tool.setuptools.package-dir]`: `<pkg_name> = "tools/<name>/src"`
+   - Add a console script under `[project.scripts]`
 
 ## Commands
 

@@ -1,7 +1,8 @@
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
-
-import pytest
+import json
+import tempfile
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fb_strikethrough.main import build_parser, edit_post, FB_PROFILE_DIR
 
@@ -76,7 +77,7 @@ def _build_mock_playwright():
     mock_pw.chromium = MagicMock()
     mock_pw.chromium.launch_persistent_context = AsyncMock(return_value=mock_context)
 
-    return mock_pw, mock_context, mock_page, mock_editor
+    return mock_pw, mock_context, mock_page, mock_editor, mock_actions_button, mock_edit_post
 
 
 def _make_factory(mock_pw):
@@ -91,41 +92,60 @@ def _make_factory(mock_pw):
     return factory
 
 
+def _run_edit_post(url, factory, config=None):
+    """Run edit_post with an optional config dict written to a temp file."""
+    if config is not None:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(config, f)
+            config_path = Path(f.name)
+        try:
+            with patch("fb_strikethrough.main.CONFIG_PATH", config_path):
+                asyncio.run(edit_post(url, _playwright_factory=factory))
+        finally:
+            config_path.unlink(missing_ok=True)
+    else:
+        # Use a path that does not exist so marker is None
+        with patch("fb_strikethrough.main.CONFIG_PATH", Path("/nonexistent/config.json")):
+            asyncio.run(edit_post(url, _playwright_factory=factory))
+
+
 class TestEditPost:
     def test_launches_with_correct_profile_and_headed(self):
-        mock_pw, mock_context, mock_page, mock_editor = _build_mock_playwright()
+        mock_pw, mock_context, mock_page, mock_editor, _, _ = _build_mock_playwright()
         factory = _make_factory(mock_pw)
-        asyncio.run(edit_post("https://www.facebook.com/groups/123/posts/456", _playwright_factory=factory))
+        _run_edit_post("https://www.facebook.com/groups/123/posts/456", factory)
 
         mock_pw.chromium.launch_persistent_context.assert_called_once_with(
             user_data_dir=str(FB_PROFILE_DIR),
             headless=False,
+            permissions=["clipboard-read", "clipboard-write"],
         )
 
     def test_navigates_to_post_url(self):
-        mock_pw, mock_context, mock_page, mock_editor = _build_mock_playwright()
+        mock_pw, mock_context, mock_page, mock_editor, _, _ = _build_mock_playwright()
         factory = _make_factory(mock_pw)
         url = "https://www.facebook.com/groups/123/posts/456"
-        asyncio.run(edit_post(url, _playwright_factory=factory))
+        _run_edit_post(url, factory)
 
         mock_page.goto.assert_called_once_with(url, wait_until="domcontentloaded")
 
     def test_clicks_actions_and_edit_post(self):
-        mock_pw, mock_context, mock_page, mock_editor = _build_mock_playwright()
+        mock_pw, mock_context, mock_page, mock_editor, mock_actions_button, mock_edit_post = _build_mock_playwright()
         factory = _make_factory(mock_pw)
-        asyncio.run(edit_post("https://www.facebook.com/groups/123/posts/456", _playwright_factory=factory))
+        _run_edit_post("https://www.facebook.com/groups/123/posts/456", factory)
 
         # Verify "Actions for this post" button was clicked
         mock_page.get_by_role.assert_any_call("button", name="Actions for this post")
+        mock_actions_button.click.assert_called_once()
         # Verify "Edit post" was clicked
         mock_page.get_by_text.assert_called_with("Edit post", exact=True)
+        mock_edit_post.click.assert_called_once()
 
-    def test_pastes_html_with_strikethrough(self):
-        mock_pw, mock_context, mock_page, mock_editor = _build_mock_playwright()
-        # Text contains "$" so it matches the marker in config
+    def test_pastes_html_with_strikethrough_no_marker(self):
+        mock_pw, mock_context, mock_page, mock_editor, _, _ = _build_mock_playwright()
         mock_editor.inner_text = AsyncMock(return_value="selling $3k")
         factory = _make_factory(mock_pw)
-        asyncio.run(edit_post("https://www.facebook.com/groups/123/posts/456", _playwright_factory=factory))
+        _run_edit_post("https://www.facebook.com/groups/123/posts/456", factory)
 
         # Verify clipboard HTML was set via page.evaluate
         mock_page.evaluate.assert_called_once()
@@ -133,20 +153,47 @@ class TestEditPost:
         js_code = call_args[0][0]
         html_arg = call_args[0][1]
         assert "ClipboardItem" in js_code
+        # No config → marker is None → all lines struck
+        assert html_arg == "<s>selling $3k</s>"
+
+    def test_pastes_html_with_marker_config(self):
+        mock_pw, mock_context, mock_page, mock_editor, _, _ = _build_mock_playwright()
+        mock_editor.inner_text = AsyncMock(return_value="selling $3k")
+        factory = _make_factory(mock_pw)
+        _run_edit_post(
+            "https://www.facebook.com/groups/123/posts/456",
+            factory,
+            config={"marker": "$"},
+        )
+
+        html_arg = mock_page.evaluate.call_args[0][1]
         assert html_arg == "<s>selling $3k</s>"
 
     def test_only_strikes_paragraphs_with_marker(self):
-        mock_pw, mock_context, mock_page, mock_editor = _build_mock_playwright()
+        mock_pw, mock_context, mock_page, mock_editor, _, _ = _build_mock_playwright()
         mock_editor.inner_text = AsyncMock(return_value="selling $3k\n250+ reviews")
         factory = _make_factory(mock_pw)
-        asyncio.run(edit_post("https://www.facebook.com/groups/123/posts/456", _playwright_factory=factory))
+        _run_edit_post(
+            "https://www.facebook.com/groups/123/posts/456",
+            factory,
+            config={"marker": "$"},
+        )
 
         html_arg = mock_page.evaluate.call_args[0][1]
         assert html_arg == "<s>selling $3k</s><br>250+ reviews"
 
-    def test_closes_context_after_edit(self):
-        mock_pw, mock_context, mock_page, mock_editor = _build_mock_playwright()
+    def test_escapes_html_special_chars(self):
+        mock_pw, mock_context, mock_page, mock_editor, _, _ = _build_mock_playwright()
+        mock_editor.inner_text = AsyncMock(return_value="Price < $3k & more")
         factory = _make_factory(mock_pw)
-        asyncio.run(edit_post("https://www.facebook.com/groups/123/posts/456", _playwright_factory=factory))
+        _run_edit_post("https://www.facebook.com/groups/123/posts/456", factory)
+
+        html_arg = mock_page.evaluate.call_args[0][1]
+        assert html_arg == "<s>Price &lt; $3k &amp; more</s>"
+
+    def test_closes_context_after_edit(self):
+        mock_pw, mock_context, mock_page, mock_editor, _, _ = _build_mock_playwright()
+        factory = _make_factory(mock_pw)
+        _run_edit_post("https://www.facebook.com/groups/123/posts/456", factory)
 
         mock_context.close.assert_called_once()
