@@ -18,7 +18,14 @@ test = [
 ]
 
 [project.scripts]
-fb-strikethrough = "tools.fb_strikethrough.main:main"
+fb-strikethrough = "fb_strikethrough.main:main"
 
-[tool.setuptools.packages.find]
-include = ["tools*"]
+[tool.setuptools]
+packages = ["fb_strikethrough"]
+
+[tool.setuptools.package-dir]
+fb_strikethrough = "tools/fb_strikethrough/src"
+
+[tool.pytest.ini_options]
+testpaths = ["tools"]
+python_files = ["test_*.py"]

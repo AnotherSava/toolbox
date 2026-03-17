@@ -2,13 +2,9 @@
 
 A collection of small tools for day-to-day life.
 
-## Tools
-
-| Command | Description |
-|---------|-------------|
-| `fb-strikethrough` | Edit a Facebook group post to replace its text with Unicode strikethrough |
-
 ## Setup
+
+### Linux / macOS / WSL
 
 ```bash
 git clone <repo-url> && cd toolbox
@@ -18,10 +14,67 @@ pip install -e ".[browser,test]"
 playwright install chromium
 ```
 
-## Usage
+### Windows (PowerShell)
 
-```bash
-fb-strikethrough <facebook-group-post-url>
+```powershell
+git clone <repo-url>; cd toolbox
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e ".[browser,test]"
+playwright install chromium
 ```
 
-On first run, a browser window opens for you to log into Facebook. Subsequent runs reuse the saved session.
+### Windows (cmd)
+
+```cmd
+git clone <repo-url> & cd toolbox
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -e ".[browser,test]"
+playwright install chromium
+```
+
+## Tools
+
+### Facebook Strikethrough
+
+Applies strikethrough formatting to a Facebook group post. Opens the post in a browser, enters the editor, and pastes the text back with native HTML strikethrough (`<s>` tags).
+
+A marker string can be configured so that only paragraphs containing it get struck through (e.g., `"$"` to cross out lines with prices while keeping the rest intact). Without the marker, the entire post is struck through.
+
+**CLI:**
+
+```bash
+fb-strikethrough <post-url>
+fb-strikethrough              # prompts for URL
+```
+
+On first run a browser window opens for Facebook login. The session is saved and reused on subsequent runs.
+
+**Config:**
+
+`tools/fb_strikethrough/config/config.json`
+
+```json
+{
+  "marker": "$"
+}
+```
+
+## Project Structure
+
+```
+tools/<tool_name>/
+  config/    tool-specific configuration (gitignored)
+  docs/      plans and documentation
+  src/       source code (mapped as a Python package)
+  tst/       tests
+```
+
+Each tool is self-contained. Adding a new tool means creating a directory under `tools/`, mapping its `src/` as a package in `pyproject.toml`, and adding a console script entry point.
+
+## Running Tests
+
+```bash
+pytest
+```

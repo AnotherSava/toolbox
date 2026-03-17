@@ -1,8 +1,8 @@
 # Ralphex
 .ralphex/
-docs/plans/*
-!docs/plans/completed/
-!docs/plans/draft/
+**/docs/plans/*
+!**/docs/plans/completed/
+!**/docs/plans/draft/
 
 # Python
 .venv/
@@ -14,3 +14,6 @@ dist/
 
 # Browser profiles
 .browser_profiles/
+
+# Tool configs (user-specific)
+**/config/config.json

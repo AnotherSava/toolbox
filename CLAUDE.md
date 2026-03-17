@@ -10,17 +10,33 @@ A collection of small tools for day-to-day life.
 
 ## Folder Structure
 
-Each tool is a self-contained subpackage under `tools/`:
+Each tool is self-contained under `tools/`:
 
 ```
-tools/<tool_name>/        # tool implementation
-tests/<tool_name>/        # tests for the tool
+tools/<tool_name>/
+├── __init__.py
+├── src/              # source modules
+│   ├── __init__.py
+│   └── main.py
+├── tst/              # tests
+│   ├── __init__.py
+│   └── test_main.py
+├── config/           # tool-specific config (gitignored)
+│   └── config.json
+└── docs/             # tool-specific docs and plans
+    └── plans/
+        ├── completed/
+        └── draft/
 ```
+
+## Docs and Plans
+
+Plans and documentation live inside each tool at `tools/<tool_name>/docs/`. This is where `/plan-ralphex` and other skills should create plan files. There is no top-level `docs/` directory — each tool owns its own docs.
 
 ## Adding a New Tool
 
-1. Create `tools/<name>/` with `__init__.py` and implementation modules
-2. Create `tests/<name>/` with `__init__.py` and test modules
+1. Create `tools/<name>/` with `src/`, `tst/`, and optionally `config/` subdirectories
+2. Add `__init__.py` in each subdirectory
 3. Add a console script entry point in `pyproject.toml` under `[project.scripts]`
 
 ## Commands
