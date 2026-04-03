@@ -61,6 +61,37 @@ On first run a browser window opens for Facebook login. The session is saved and
 }
 ```
 
+### Notion Tools
+
+Workspace management utilities for Notion using the internal API (token_v2 cookie auth), plus an Evernote markdown migration helper.
+
+**CLI:**
+
+```bash
+notion clear-trash           # permanently delete all trashed pages
+notion clear-teamspace       # interactively select and delete a teamspace
+notion md-size-report        # analyze Evernote markdown exports by size
+```
+
+**Config:**
+
+`tools/notion/config/config.json`
+
+```json
+{
+  "notion_token_v2": "your_token_v2_from_browser_cookies",
+  "md_size_report": {
+    "notebook_dir": "/path/to/evernote/md/notebook",
+    "resources_dir": "/path/to/evernote/md/_resources",
+    "output_csv": "/path/to/output.csv"
+  }
+}
+```
+
+The `notion_token_v2` value can be obtained from browser cookies at notion.so. The `md_size_report` section is only needed for the `md-size-report` subcommand.
+
+> **Warning:** `clear-trash` and `clear-teamspace` perform irreversible bulk deletions. They ask for confirmation before proceeding.
+
 ## Project Structure
 
 ```

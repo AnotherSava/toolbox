@@ -7,7 +7,9 @@ name = "toolbox"
 version = "0.1.0"
 description = "A collection of small tools for day-to-day life"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "requests",
+]
 
 [project.optional-dependencies]
 browser = [
@@ -15,16 +17,19 @@ browser = [
 ]
 test = [
     "pytest",
+    "requests-mock",
 ]
 
 [project.scripts]
 fb-strikethrough = "fb_strikethrough.main:main"
+notion = "notion_tools.main:main"
 
 [tool.setuptools]
-packages = ["fb_strikethrough"]
+packages = ["fb_strikethrough", "notion_tools"]
 
 [tool.setuptools.package-dir]
 fb_strikethrough = "tools/fb_strikethrough/src"
+notion_tools = "tools/notion/src"
 
 [tool.pytest.ini_options]
 testpaths = ["tools"]

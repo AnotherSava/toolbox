@@ -6,6 +6,7 @@ A collection of small tools for day-to-day life.
 
 - Python 3.12+
 - Playwright (browser automation)
+- requests (HTTP client)
 - pytest (testing)
 
 ## Folder Structure
