@@ -48,6 +48,10 @@ Plans and documentation live inside each tool at `tools/<tool_name>/docs/`. This
 - Run tests: `pytest`
 - Install for development: `pip install -e ".[browser,test]"`
 
+## Notion API
+
+The notion tool uses Notion's undocumented internal API (v3), not the official REST API. See `tools/notion/docs/learnings/notion-api-quirks.md` for known gotchas (search result caps, response format quirks, archive vs trash semantics).
+
 ## Browser Profiles
 
 Tools that automate websites store browser profiles under `.browser_profiles/<site>/` at the project root (e.g., `.browser_profiles/facebook/`). Multiple tools targeting the same site share one login session. This directory is gitignored.
