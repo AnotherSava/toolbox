@@ -7,6 +7,7 @@ A collection of small tools for day-to-day life.
 - Python 3.12+
 - Playwright (browser automation)
 - requests (HTTP client)
+- Pillow (image generation)
 - pytest (testing)
 
 ## Folder Structure
@@ -47,6 +48,22 @@ Plans and documentation live inside each tool at `tools/<tool_name>/docs/`. This
 
 - Run tests: `pytest`
 - Install for development: `pip install -e ".[browser,test]"`
+
+## AutoHotkey Tool
+
+The `ahk` tool is a collection of AutoHotkey v2 scripts, not a Python package. It uses a simplified layout:
+
+```
+tools/ahk/
+├── scripts/          # .ahk source files
+└── docs/
+```
+
+No `src/`, `tst/`, or `config/` subdirectories. Not registered in `pyproject.toml`. Scripts run via the AutoHotkey v2 runtime (`AutoHotkey.exe`).
+
+Standalone AHK scripts belong in `tools/ahk/scripts/`. Tool-specific AHK helpers (e.g., a Windows-only OS integration helper for a Python tool) live under the tool that owns them, in a `scripts/` subdirectory — for example, `tools/overlay_grid/scripts/overlay.ahk`.
+
+For AHK conventions, taskbar-hiding patterns, folder-watch snippets, and the Windows auto-start shortcut recipe, see the global learnings file at `~/.claude/learnings/autohotkey.md`.
 
 ## Notion API
 

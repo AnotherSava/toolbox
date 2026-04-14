@@ -1,0 +1,34 @@
+{
+  "width": 3840,
+  "height": 2160,
+  "minor_step": 20,
+  "major_step": 100,
+  "super_step": 500,
+  "font_name": "arial.ttf",
+  "font_size": 18,
+  "output_path": "output/overlay_grid_{width}x{height}.png",
+  "colors": {
+    "background": [13, 18, 28],
+    "minor": [44, 56, 78],
+    "major": [92, 121, 170],
+    "super": [139, 168, 206],
+    "axis": [160, 198, 255],
+    "text": [220, 235, 255],
+    "text_shadow": [0, 0, 0]
+  },
+  "variants": {
+    "light": {
+      "colors": {}
+    },
+    "dark": {
+      "colors": {
+        "minor": [170, 180, 200],
+        "major": [90, 110, 145],
+        "super": [45, 70, 110],
+        "axis": [20, 50, 105],
+        "text": [25, 35, 60],
+        "text_shadow": [245, 245, 255]
+      }
+    }
+  }
+}

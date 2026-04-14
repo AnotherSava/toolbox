@@ -92,6 +92,60 @@ The `notion_token_v2` value can be obtained from browser cookies at notion.so. T
 
 > **Warning:** `clear-trash` and `clear-teamspace` perform irreversible bulk deletions. They ask for confirmation before proceeding.
 
+### Overlay Grid
+
+Generates a coordinate grid image (PNG) for use as a click-through screen overlay or as a regular desktop wallpaper. Useful as a layout reference when positioning desktop widgets or UI mockups.
+
+**CLI:**
+
+```bash
+overlay-grid                                        # uses output_path from config
+overlay-grid out.png                                # override output path
+overlay-grid --width 1920 --height 1080 out.png
+overlay-grid --variant dark --background ff00ff     # dark lines, magenta chroma-key background
+```
+
+**Config:**
+
+`tools/overlay_grid/config/config.json`
+
+Dimensions, step sizes (minor/major/super grid intervals), colors, font, default output path, and named color variants. Unlike the other tools, this config is committed with sensible 4K defaults and can be edited in place. Relative `output_path` values resolve against the tool directory, so `overlay-grid` always writes under `tools/overlay_grid/output/` by default — regardless of where you run it from.
+
+**Windows screen overlay** (`tools/overlay_grid/scripts/overlay.ahk`):
+
+An AutoHotkey v2 helper that shows the grid as a click-through overlay on top of the desktop — wallpaper state is never touched, so Windows Spotlight / Slideshow / Picture modes keep running underneath.
+
+- `Ctrl+Shift+9` — cycle overlay: hidden → dark variant → light variant → hidden
+
+Two color variants cover different wallpaper brightness:
+
+- **dark** — dark lines, designed to be visible on light/bright wallpapers
+- **light** — light lines, designed to be visible on dark wallpapers
+
+On each first encounter of a variant, the script enumerates monitors and runs `overlay-grid --variant <name> --background ff00ff` for each resolution, producing `output/overlay_grid_<variant>_<W>x<H>.png`. It displays one always-on-top click-through window per monitor with the magenta background chroma-keyed out so only the grid lines and labels show. Subsequent cycles are instant.
+
+Color palettes live in `config/config.json` under `variants.<name>.colors` — edit them to taste. An empty variant (`"colors": {}`) inherits from the top-level `colors` section.
+
+Run the script with the AutoHotkey v2 runtime, or add a startup shortcut (see `~/.claude/learnings/autohotkey.md`).
+
+### AutoHotkey Scripts
+
+A collection of [AutoHotkey v2](https://www.autohotkey.com/) scripts for Windows automation. Unlike the other tools, these are standalone `.ahk` files — no Python packaging, no CLI entry point. Just run them with the AutoHotkey runtime.
+
+**Scripts** (in `tools/ahk/scripts/`):
+
+- `base.ahk` — F1 hides a window from the taskbar; F2 restores it. Edit `targetTitle` in the script to match your window.
+- `hide.ahk` — Auto-hides specified windows from the taskbar when they open. Edit the `windows` array to add/remove targets. See the top comment for how to auto-run on startup.
+
+**Usage:**
+
+```powershell
+# Run a script manually
+"C:\Program Files\AutoHotkey\v2\AutoHotkey.exe" tools\ahk\scripts\hide.ahk
+```
+
+Or double-click the `.ahk` file in Explorer if AutoHotkey v2 is installed as the default handler.
+
 ## Project Structure
 
 ```

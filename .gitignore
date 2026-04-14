@@ -17,3 +17,7 @@ dist/
 
 # Tool configs (user-specific)
 **/config/config.json
+!tools/overlay_grid/config/config.json
+
+# Overlay grid outputs
+tools/overlay_grid/output/
