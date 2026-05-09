@@ -71,6 +71,8 @@ Workspace management utilities for Notion using the internal API (token_v2 cooki
 notion clear-trash           # permanently delete all trashed pages
 notion clear-teamspace       # interactively select and delete a teamspace
 notion md-size-report        # analyze Evernote markdown exports by size
+notion optimize-images <url> # download, convert (WebP/AVIF), re-upload, and consolidate images
+                             # in an embedded sub-collection into its Picture property
 ```
 
 **Config:**
@@ -115,7 +117,8 @@ Dimensions, step sizes (minor/major/super grid intervals), colors, font, default
 
 An AutoHotkey v2 helper that shows the grid as a click-through overlay on top of the desktop — wallpaper state is never touched, so Windows Spotlight / Slideshow / Picture modes keep running underneath.
 
-- `Ctrl+Shift+9` — cycle overlay: hidden → dark variant → light variant → hidden
+- `Ctrl+Shift+9` — cycle grid overlay: hidden → dark variant → light variant → hidden
+- `Ctrl+Shift+0` — toggle a sizing frame (rectangle whose **interior** matches the width/height fields) glued to the right edge of a floating dialog. Drag the dialog to move the frame along with it. The dialog also has a folder picker, filename field, and a **Screenshot** button that captures the framed area as a PNG. Dimensions, folder, and filename persist across runs. Filenames auto-disambiguate (`frame.png` → `frame_1.png` → `frame_2.png` …) so repeated clicks don't overwrite.
 
 Two color variants cover different wallpaper brightness:
 
@@ -127,6 +130,21 @@ On each first encounter of a variant, the script enumerates monitors and runs `o
 Color palettes live in `config/config.json` under `variants.<name>.colors` — edit them to taste. An empty variant (`"colors": {}`) inherits from the top-level `colors` section.
 
 Run the script with the AutoHotkey v2 runtime, or add a startup shortcut (see `~/.claude/learnings/autohotkey.md`).
+
+### Image Optimizer
+
+A standalone CLI for shrinking images before uploading them anywhere — Notion, GitHub, a blog, etc. Resizes to a max width and re-encodes as WebP (default) or AVIF.
+
+**CLI:**
+
+```bash
+image-opt photo.jpg                          # outputs ./photo.webp
+image-opt ./photos --out ./photos-small      # converts every image in a directory
+image-opt ./in --format avif --quality 50    # smaller files (note: Notion does not preview AVIF)
+image-opt ./in --max-width 1024 --quality 60 # defaults
+```
+
+Accepts files or directories; recognizes JPG, PNG, HEIC/HEIF, BMP, TIFF, WebP, AVIF as inputs. Output filename mirrors the input stem (`photo.heic` → `photo.webp`). No config file; all options are CLI flags.
 
 ### AutoHotkey Scripts
 

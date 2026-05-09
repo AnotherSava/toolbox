@@ -1,30 +1,27 @@
 """CLI entry point for Notion workspace management tools."""
 
-import argparse
 import sys
 
 from .clear_teamspace import main as clear_teamspace_main
 from .clear_trash import main as clear_trash_main
 from .md_size_report import main as md_size_report_main
+from .optimize_images import main as optimize_images_main
 
 
-def build_parser() -> argparse.ArgumentParser:
-    """Build the argument parser with subcommands."""
-    parser = argparse.ArgumentParser(prog="notion", description="Notion workspace management tools.")
-    sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("clear-trash", help="Permanently delete all trashed pages")
-    sub.add_parser("clear-teamspace", help="Delete all pages from a teamspace")
-    sub.add_parser("md-size-report", help="Analyze Evernote markdown exports by size")
-    return parser
+COMMANDS = {
+    "clear-trash": clear_trash_main,
+    "clear-teamspace": clear_teamspace_main,
+    "md-size-report": md_size_report_main,
+    "optimize-images": optimize_images_main,
+}
 
 
 def main() -> None:
-    """CLI entry point."""
-    parser = build_parser()
-    args = parser.parse_args()
-    commands = {
-        "clear-trash": clear_trash_main,
-        "clear-teamspace": clear_teamspace_main,
-        "md-size-report": md_size_report_main,
-    }
-    sys.exit(commands[args.command]())
+    """CLI entry point. Dispatches to a subcommand and forwards remaining args to it."""
+    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+        cmds = ", ".join(COMMANDS)
+        print(f"usage: notion <command> [args...]\n\ncommands: {cmds}", file=sys.stderr)
+        sys.exit(2 if len(sys.argv) >= 2 else 0)
+    name = sys.argv[1]
+    sys.argv = [f"notion {name}", *sys.argv[2:]]
+    sys.exit(COMMANDS[name]())

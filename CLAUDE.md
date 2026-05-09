@@ -26,6 +26,7 @@ tools/<tool_name>/
 ├── config/           # tool-specific config (gitignored)
 │   └── config.json
 └── docs/             # tool-specific docs and plans
+    ├── examples/     # one-off scripts using this tool — adapt, don't run as-is
     └── plans/
         ├── completed/
         └── draft/
@@ -43,6 +44,14 @@ Plans and documentation live inside each tool at `tools/<tool_name>/docs/`. This
    - Add the package name to `[tool.setuptools] packages`
    - Add the src mapping under `[tool.setuptools.package-dir]`: `<pkg_name> = "tools/<name>/src"`
    - Add a console script under `[project.scripts]`
+
+## Subcommand or example?
+
+When writing a script that uses one of these tools:
+- **Polished, parametrized CLI for repeated use** → register under `src/` + `pyproject.toml` as a subcommand.
+- **One-off workflow capturing a specific job** → place under `tools/<tool>/docs/examples/<name>.py` with an `EXAMPLE:` docstring header. Don't register as a subcommand. Use installed-package imports (`from notion_tools.client import ...`), not relative imports or `sys.path` hacks.
+
+Extract reusable primitives into their own tool (e.g., `image_opt`) so each example is mostly glue. See `tools/notion/docs/examples/README.md` for live examples.
 
 ## Commands
 
