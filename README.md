@@ -146,6 +146,29 @@ image-opt ./in --max-width 1024 --quality 60 # defaults
 
 Accepts files or directories; recognizes JPG, PNG, HEIC/HEIF, BMP, TIFF, WebP, AVIF as inputs. Output filename mirrors the input stem (`photo.heic` → `photo.webp`). No config file; all options are CLI flags.
 
+### Flightradar Importer
+
+Imports your personal Flightradar24 logbook into a Notion database. Reads a FR24 CSV export, enriches each flight with airport/city/country metadata from [OurAirports](https://ourairports.com/), groups flights into trips (one trip = chronologically-contiguous flights starting and ending at a home city), and creates a Notion database with two pre-configured views (Full and Compact), trip-based row banding via Notion's conditional-color rules, and chronological sort.
+
+**CLI:**
+
+```bash
+flightradar <notion-page-url>                 # imports tools/flightradar/data/flights.csv
+flightradar <notion-page-url> --csv path.csv  # specify a CSV explicitly
+```
+
+Workflow:
+
+1. Export your logbook at `my.flightradar24.com/settings/export` and save the CSV
+2. Place it at `tools/flightradar/data/flights.csv` (default path; gitignored)
+3. Run `flightradar <parent-page-url>` — creates a "Flights" database under that page
+
+The importer uses the same Notion credentials as the Notion Tools (token_v2 cookie auth in `tools/notion/config/config.json`).
+
+**Config:** None of its own. Reuses `tools/notion/config/config.json` for Notion auth.
+
+See `tools/flightradar/docs/learnings/fr24-csv-quirks.md` for the FR24 CSV format details and `tools/flightradar/API_RESEARCH.md` for why CSV is the only sanctioned interface.
+
 ### AutoHotkey Scripts
 
 A collection of [AutoHotkey v2](https://www.autohotkey.com/) scripts for Windows automation. Unlike the other tools, these are standalone `.ahk` files — no Python packaging, no CLI entry point. Just run them with the AutoHotkey runtime.

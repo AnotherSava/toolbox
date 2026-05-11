@@ -21,3 +21,6 @@ dist/
 
 # Overlay grid outputs
 tools/overlay_grid/output/
+
+# Flightradar data (personal flight history + airport DB cache)
+tools/flightradar/data/

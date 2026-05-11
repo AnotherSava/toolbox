@@ -22,4 +22,30 @@ Notion internal API (token_v2 cookie auth, /api/v3/ endpoints) has several quirk
 
 - **Programmatically-created blocks don't get `created_time` auto-filled.** When you create a block via `saveTransactionsFanout` with `command: "set"` and a fresh UUID, Notion fills in CRDT data and `version` but leaves `created_time` absent. If you need stable ordering on rows you created, set `created_time` explicitly in the args, or sort by row UUID.
 
+- **`format.block_color` on collection row blocks does not render in table view.** The value persists when set via `saveTransactionsFanout`, but Notion's table renderer ignores it (verified by setting six distinct vivid colors on visible rows — none rendered). Per-row coloring in inline databases must be done via `format.conditional_color_rules` on the *view*, not on the row block. `block_color` still works on standalone page blocks.
+
+- **Conditional row colors via `format.conditional_color_rules` on a view.** Per-view rule shape:
+  ```json
+  [{
+      "id": "<uuid>",
+      "background": {"type": "match_property_value"},
+      "conditional_filter": {"filter": {"operator": "is_not_empty"}, "property": "<schema_key>"},
+      "properties_to_color": {"type": "all"}
+  }]
+  ```
+  With `match_property_value`, the row background inherits the referenced select-property option's color — e.g. a row whose `Parity` property holds the option whose `color: "blue"` gets a blue row tint. Use a binary helper property (A/B, with one "default" and one colored option) to band rows by an arbitrary grouping with a single rule.
+
+- **Column alignment cannot be set via v3 API.** None of `alignment`, `text_align`, `text_alignment`, `align`, or a nested `format.alignment` are honored — at either the schema level or the `format.table_properties[i]` level. All values persist; none render. Alignment is currently a Notion UI-only feature; users must right-click the column header to align.
+
+- **`date_format` only respects a fixed enum.** Valid values: missing/empty (renders as "Full date", e.g. "July 4, 2025"), `relative`, `MM/DD/YYYY`, `DD/MM/YYYY`, `YYYY/MM/DD`. Anything else (`ll`, `MMM D, YYYY`, …) is accepted by the API but silently falls back to Full date. For abbreviated-month rendering ("Jul 4, 2025"), store as a text column with the format pre-applied and keep a hidden real-date column for chronological sort.
+
+- **Grouped views need both `query2.group_by` and `format.collection_groups`.** `group_by` holds the property key; `collection_groups` is an array of `{property, value: {type, value}, hidden}` — one entry per distinct group value, plus a catch-all `{property, value: {type}, hidden: False}` for the unset bucket. Group display order follows the option order in the property's schema (for `select`-type group keys).
+
+- **Trashed blocks (`alive=false`) remain fetchable via `syncRecordValues`.** Useful reverse-engineering technique when an API field name is unknown: set up the feature via Notion's UI, then `syncRecordValues` the block to see what field shape Notion persisted. The block stays inspectable even after being trashed. This is how the `conditional_color_rules` schema was discovered.
+
 When modifying or extending the notion tool's API calls, don't assume standard REST pagination behavior. Always test with real data.
+
+## Related reading
+
+- **[`jamalex/notion-py`](https://github.com/jamalex/notion-py)** — the most complete public Python client for Notion's internal v3 API. Uses `token_v2` cookie auth (same surface as this tool). Wraps blocks, collections, views, and transactions in Python classes; auto-generates row attributes from collection schemas. Its own `CLAUDE.md` is a good architectural reference. **Limitation:** the library is built around older endpoints (`submitTransaction` instead of `saveTransactionsFanout`, `query.group_by` instead of `query2.group_by`) and does NOT cover the post-2022 view-format fields documented above (`conditional_color_rules`, `collection_groups`, `block_color`, schema-level `date_format`, etc.). Use it for the well-trodden parts of v3; fall back to raw HTTP + this quirks file for the bleeding-edge view config.
+- **[`Notion MCP server`](https://mcp.notion.com/mcp)** — Notion's official API path (OAuth + REST). Separate surface, separate constraints. None of the quirks here apply there; many of the things this tool does (multi-view DB construction, conditional row colors, bulk teamspace deletion) aren't exposed via the MCP server.

@@ -23,15 +23,17 @@ test = [
 
 [project.scripts]
 fb-strikethrough = "fb_strikethrough.main:main"
+flightradar = "flightradar.main:main"
 image-opt = "image_opt.main:main"
 notion = "notion_tools.main:main"
 overlay-grid = "overlay_grid.main:main"
 
 [tool.setuptools]
-packages = ["fb_strikethrough", "image_opt", "notion_tools", "overlay_grid"]
+packages = ["fb_strikethrough", "flightradar", "image_opt", "notion_tools", "overlay_grid"]
 
 [tool.setuptools.package-dir]
 fb_strikethrough = "tools/fb_strikethrough/src"
+flightradar = "tools/flightradar/src"
 image_opt = "tools/image_opt/src"
 notion_tools = "tools/notion/src"
 overlay_grid = "tools/overlay_grid/src"
