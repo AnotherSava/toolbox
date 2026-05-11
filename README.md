@@ -94,43 +94,6 @@ The `notion_token_v2` value can be obtained from browser cookies at notion.so. T
 
 > **Warning:** `clear-trash` and `clear-teamspace` perform irreversible bulk deletions. They ask for confirmation before proceeding.
 
-### Overlay Grid
-
-Generates a coordinate grid image (PNG) for use as a click-through screen overlay or as a regular desktop wallpaper. Useful as a layout reference when positioning desktop widgets or UI mockups.
-
-**CLI:**
-
-```bash
-overlay-grid                                        # uses output_path from config
-overlay-grid out.png                                # override output path
-overlay-grid --width 1920 --height 1080 out.png
-overlay-grid --variant dark --background ff00ff     # dark lines, magenta chroma-key background
-```
-
-**Config:**
-
-`tools/overlay_grid/config/config.json`
-
-Dimensions, step sizes (minor/major/super grid intervals), colors, font, default output path, and named color variants. Unlike the other tools, this config is committed with sensible 4K defaults and can be edited in place. Relative `output_path` values resolve against the tool directory, so `overlay-grid` always writes under `tools/overlay_grid/output/` by default — regardless of where you run it from.
-
-**Windows screen overlay** (`tools/overlay_grid/scripts/overlay.ahk`):
-
-An AutoHotkey v2 helper that shows the grid as a click-through overlay on top of the desktop — wallpaper state is never touched, so Windows Spotlight / Slideshow / Picture modes keep running underneath.
-
-- `Ctrl+Shift+9` — cycle grid overlay: hidden → dark variant → light variant → hidden
-- `Ctrl+Shift+0` — toggle a sizing frame (rectangle whose **interior** matches the width/height fields) glued to the right edge of a floating dialog. Drag the dialog to move the frame along with it. The dialog also has a folder picker, filename field, and a **Screenshot** button that captures the framed area as a PNG. Dimensions, folder, and filename persist across runs. Filenames auto-disambiguate (`frame.png` → `frame_1.png` → `frame_2.png` …) so repeated clicks don't overwrite.
-
-Two color variants cover different wallpaper brightness:
-
-- **dark** — dark lines, designed to be visible on light/bright wallpapers
-- **light** — light lines, designed to be visible on dark wallpapers
-
-On each first encounter of a variant, the script enumerates monitors and runs `overlay-grid --variant <name> --background ff00ff` for each resolution, producing `output/overlay_grid_<variant>_<W>x<H>.png`. It displays one always-on-top click-through window per monitor with the magenta background chroma-keyed out so only the grid lines and labels show. Subsequent cycles are instant.
-
-Color palettes live in `config/config.json` under `variants.<name>.colors` — edit them to taste. An empty variant (`"colors": {}`) inherits from the top-level `colors` section.
-
-Run the script with the AutoHotkey v2 runtime, or add a startup shortcut (see `~/.claude/learnings/autohotkey.md`).
-
 ### Image Optimizer
 
 A standalone CLI for shrinking images before uploading them anywhere — Notion, GitHub, a blog, etc. Resizes to a max width and re-encodes as WebP (default) or AVIF.

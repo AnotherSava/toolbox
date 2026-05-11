@@ -70,7 +70,7 @@ tools/ahk/
 
 No `src/`, `tst/`, or `config/` subdirectories. Not registered in `pyproject.toml`. Scripts run via the AutoHotkey v2 runtime (`AutoHotkey.exe`).
 
-Standalone AHK scripts belong in `tools/ahk/scripts/`. Tool-specific AHK helpers (e.g., a Windows-only OS integration helper for a Python tool) live under the tool that owns them, in a `scripts/` subdirectory — for example, `tools/overlay_grid/scripts/overlay.ahk`.
+Standalone AHK scripts belong in `tools/ahk/scripts/`. Tool-specific AHK helpers (e.g., a Windows-only OS integration helper for a Python tool) live under the tool that owns them, in a `scripts/` subdirectory.
 
 For AHK conventions, taskbar-hiding patterns, folder-watch snippets, and the Windows auto-start shortcut recipe, see the global learnings file at `~/.claude/learnings/autohotkey.md`.
 
