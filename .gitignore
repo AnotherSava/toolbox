@@ -20,3 +20,6 @@ dist/
 
 # Flightradar data (personal flight history + airport DB cache)
 tools/flightradar/data/
+
+# github tool report output
+tools/github/data/
