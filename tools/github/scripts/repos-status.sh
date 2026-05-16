@@ -8,16 +8,46 @@
 # reflects what your local tracking refs already know about the remote.
 #
 # Environment overrides:
-#   PROJECTS_ROOT — directory to scan (default /d/projects)
+#   PROJECTS_ROOT — directory to scan (overrides config/config.env)
 #   GITHUB_USER   — origin-URL owner to filter by (default AnotherSava)
+#
+# On first run, if PROJECTS_ROOT is not set and config/config.env is
+# missing, the script deduces PROJECTS_ROOT as the parent of the toolbox
+# repo, asks for confirmation, and saves it to config/config.env.
 
 set -euo pipefail
 
-PROJECTS_ROOT="${PROJECTS_ROOT:-/d/projects}"
 GITHUB_USER="${GITHUB_USER:-AnotherSava}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+CONFIG_FILE="$TOOL_DIR/config/config.env"
 OUTPUT_CSV="${1:-$TOOL_DIR/data/repos-status.csv}"
+
+if [[ -z "${PROJECTS_ROOT:-}" ]]; then
+  if [[ -f "$CONFIG_FILE" ]]; then
+    # shellcheck disable=SC1090
+    source "$CONFIG_FILE"
+  fi
+fi
+
+if [[ -z "${PROJECTS_ROOT:-}" ]]; then
+  repo_root="$(cd "$TOOL_DIR/../.." && pwd)"
+  deduced="$(dirname "$repo_root")"
+  echo "No PROJECTS_ROOT set and no config at $CONFIG_FILE." >&2
+  echo "Deduced from script location: $deduced" >&2
+  read -r -p "Use this as PROJECTS_ROOT? [Y/n] " ans
+  if [[ -z "$ans" || "$ans" =~ ^[Yy] ]]; then
+    PROJECTS_ROOT="$deduced"
+  else
+    read -r -p "Enter PROJECTS_ROOT: " PROJECTS_ROOT
+  fi
+  mkdir -p "$(dirname "$CONFIG_FILE")"
+  {
+    echo "# github tool config — gitignored, user-specific"
+    echo "PROJECTS_ROOT=\"$PROJECTS_ROOT\""
+  } > "$CONFIG_FILE"
+  echo "Wrote $CONFIG_FILE" >&2
+fi
 
 # Repos owned by $GITHUB_USER that should still be excluded from the report.
 # See ../docs/findings.md for rationale.
@@ -34,7 +64,10 @@ is_excluded() {
   return 1
 }
 
-mapfile -t git_dirs < <(
+git_dirs=()
+while IFS= read -r line; do
+  git_dirs+=("$line")
+done < <(
   find "$PROJECTS_ROOT" -maxdepth 4 -type d -name ".git" 2>/dev/null \
     | grep -v "/_archive/" \
     | grep -v "/node_modules/" \

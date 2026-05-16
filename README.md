@@ -145,7 +145,7 @@ PROJECTS_ROOT=/d/other GITHUB_USER=someone \
   bash tools/github/scripts/repos-status.sh                # override scan root / owner
 ```
 
-Defaults: `PROJECTS_ROOT=/d/projects`, `GITHUB_USER=AnotherSava`. To exclude repos you own but don't want in the report, edit the `EXCLUDED` array at the top of the script.
+On first run, if `PROJECTS_ROOT` isn't set and no config exists, the script deduces it as the parent of the toolbox repo, asks for confirmation, and saves the answer to `tools/github/config/config.env` (gitignored). Subsequent runs read that file silently. The `PROJECTS_ROOT` env var always overrides the saved value. Default `GITHUB_USER=AnotherSava`. To exclude repos you own but don't want in the report, edit the `EXCLUDED` array at the top of the script.
 
 See `tools/github/docs/findings.md` for discovery rules, ownership-filter behavior, and the "last pushed" caveat.
 

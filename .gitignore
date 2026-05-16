@@ -17,6 +17,7 @@ dist/
 
 # Tool configs (user-specific)
 **/config/config.json
+**/config/config.env
 
 # Flightradar data (personal flight history + airport DB cache)
 tools/flightradar/data/

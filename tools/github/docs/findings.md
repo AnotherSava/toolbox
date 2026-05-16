@@ -6,7 +6,7 @@ defaults look the way they do.
 
 ## Repository discovery rules
 
-The script walks `PROJECTS_ROOT` (default `/d/projects`) at `find -maxdepth 4`.
+The script walks `PROJECTS_ROOT` (resolved from env var → `config/config.env` → first-run prompt) at `find -maxdepth 4`.
 The user's deepest repo root is at depth 2 (`games/<repo>/`, `3d/<repo>/`),
 so depth 4 (i.e. `<repo>/.git/`) is generous.
 

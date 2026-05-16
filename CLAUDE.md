@@ -81,6 +81,7 @@ The `github` tool is a bash-only utility using the same simplified layout as `ah
 ```
 tools/github/
 ├── scripts/          # .sh source files
+├── config/           # user-specific config.env (gitignored)
 ├── data/             # generated reports (gitignored)
 └── docs/
 ```
