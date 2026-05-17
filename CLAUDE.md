@@ -74,20 +74,6 @@ Standalone AHK scripts belong in `tools/ahk/scripts/`. Tool-specific AHK helpers
 
 For AHK conventions, taskbar-hiding patterns, folder-watch snippets, and the Windows auto-start shortcut recipe, see the global learnings file at `~/.claude/learnings/autohotkey.md`.
 
-## Shell-script Tools
-
-The `github` tool is a bash-only utility using the same simplified layout as `ahk`:
-
-```
-tools/github/
-├── scripts/          # .sh source files
-├── config/           # user-specific config.env (gitignored)
-├── data/             # generated reports (gitignored)
-└── docs/
-```
-
-No `src/`, `tst/`, or `pyproject.toml` registration. Run via `bash tools/github/scripts/<name>.sh`.
-
 ## Notion API
 
 The notion tool uses Notion's undocumented internal API (v3), not the official REST API. See `tools/notion/docs/learnings/notion-api-quirks.md` for known gotchas (search result caps, response format quirks, archive vs trash semantics).

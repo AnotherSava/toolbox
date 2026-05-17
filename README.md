@@ -132,23 +132,6 @@ The importer uses the same Notion credentials as the Notion Tools (token_v2 cook
 
 See `tools/flightradar/docs/learnings/fr24-csv-quirks.md` for the FR24 CSV format details and `tools/flightradar/API_RESEARCH.md` for why CSV is the only sanctioned interface.
 
-### GitHub Repo Status
-
-A bash script that surveys your local clones under a projects root directory, filters to repositories whose `origin` belongs to your GitHub account, and reports each repo's branch, last pushed commit date, count of unpushed commits, and count of uncommitted local changes. Output is printed as a table and written to a CSV. Reads local git state only — does not run `git fetch`.
-
-**Usage:**
-
-```bash
-bash tools/github/scripts/repos-status.sh                  # writes tools/github/data/repos-status.csv
-bash tools/github/scripts/repos-status.sh /path/out.csv    # custom output path
-PROJECTS_ROOT=/d/other GITHUB_USER=someone \
-  bash tools/github/scripts/repos-status.sh                # override scan root / owner
-```
-
-On first run, if `PROJECTS_ROOT` isn't set and no config exists, the script deduces it as the parent of the toolbox repo, asks for confirmation, and saves the answer to `tools/github/config/config.env` (gitignored). Subsequent runs read that file silently. The `PROJECTS_ROOT` env var always overrides the saved value. Default `GITHUB_USER=AnotherSava`. To exclude repos you own but don't want in the report, edit the `EXCLUDED` array at the top of the script.
-
-See `tools/github/docs/findings.md` for discovery rules, ownership-filter behavior, and the "last pushed" caveat.
-
 ### AutoHotkey Scripts
 
 A collection of [AutoHotkey v2](https://www.autohotkey.com/) scripts for Windows automation. Unlike the other tools, these are standalone `.ahk` files — no Python packaging, no CLI entry point. Just run them with the AutoHotkey runtime.
