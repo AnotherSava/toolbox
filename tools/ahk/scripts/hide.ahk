@@ -17,8 +17,6 @@ SetTitleMatchMode(2)  ; Partial title match
 ; Windows to hide from taskbar (checked on window creation)
 ; Format: {title: "partial title", class: "class name", show: true/false}
 windows := [
-;    {title: "Run - build123d-models", class: "SunAwtFrame", show: true},
-;    {title: "Terminal - build123d-models", class: "SunAwtFrame", show: true},
     {title: "f3d", class: "CASCADIA_HOSTING_WINDOW_CLASS", show: false}
 ]
 
