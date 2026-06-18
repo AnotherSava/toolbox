@@ -43,6 +43,14 @@ Notion internal API (token_v2 cookie auth, /api/v3/ endpoints) has several quirk
 
 - **Trashed blocks (`alive=false`) remain fetchable via `syncRecordValues`.** Useful reverse-engineering technique when an API field name is unknown: set up the feature via Notion's UI, then `syncRecordValues` the block to see what field shape Notion persisted. The block stays inspectable even after being trashed. This is how the `conditional_color_rules` schema was discovered.
 
+- **Nested blocks need both a parent-ID chain AND a `listAfter` at every level.** Children with `parent_id=<parent_block_id>` won't render unless they're also `listAfter`-ed into the parent block's own `content`. Pattern for one country → many states:
+  1. Create the country block (`parent_id=page_id`), then `listAfter` it into `page.content`
+  2. For each state: create with `parent_id=country_block_id`, then `listAfter` it into the country block's `content`
+
+  Skip either listAfter and the block exists in the recordMap but isn't visible in the rendered tree.
+
+- **Rich-text title runs annotate inline.** A `title` property is a list of runs where each run is `[text]` or `[text, annotations]`. Annotations is a list of `[type, ...args]`: `[["b"]]` bold, `[["i"]]` italic, `[["a", url]]` link, `[["c"]]` inline code. Example title with a bold lead-in plus a link: `[["List", [["b"]]], [": "], ["map", [["a", "https://..."]]]]`. Same shape as the file-property `[[filename, [["a", attachment_url]]]]` pattern, just for inline text formatting. Update a single block's title with `saveTransactionsFanout` `command:"set"` on `path:["properties","title"]`.
+
 When modifying or extending the notion tool's API calls, don't assume standard REST pagination behavior. Always test with real data.
 
 ## Related reading

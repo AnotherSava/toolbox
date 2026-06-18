@@ -16,8 +16,9 @@ dist/
 .browser_profiles/
 
 # Tool configs (user-specific)
-**/config/config.json
-**/config/config.env
+**/config/*.json
+**/config/*.env
+**/config/*.py
 
 # Flightradar data (personal flight history + airport DB cache)
 tools/flightradar/data/
