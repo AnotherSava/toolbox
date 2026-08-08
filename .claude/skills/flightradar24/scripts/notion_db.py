@@ -23,7 +23,7 @@ from typing import Iterable
 
 from notion_tools.client import NotionClient
 
-from flightradar.flights import Flight, HOME_CITIES
+from flights import Flight, HOME_CITIES
 
 SCHEMA: list[tuple[str, str, str]] = [
     ("title", "Route", "title"),

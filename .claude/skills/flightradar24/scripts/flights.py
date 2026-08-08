@@ -8,17 +8,19 @@ The FR24 personal logbook CSV typically has columns like::
 
 The ``From`` / ``To`` cells are usually formatted as ``"Airport Name (IATA/ICAO)"``
 so we extract the codes via regex and resolve them through the OurAirports
-lookup. Anything we can't parse is preserved as the raw string so no data is
-silently dropped.
+lookup; a cell that doesn't match keeps its raw string rather than being lost.
+
+Seat number, seat type and the trailing ``*_id`` columns are read past on
+purpose — see "Deliberately not stored" in ``references/notion-db.md``.
 """
 
 import csv
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from flightradar.airports import Airport, resolve
+from airports import Airport, resolve
 
 CODE_RE = re.compile(r"\(([A-Z0-9]{3,4})(?:/([A-Z0-9]{4}))?\)\s*$")
 TRAILING_PAREN_RE = re.compile(r"\s*\([^()]*\)\s*$")
@@ -31,7 +33,6 @@ EMPTY_PLACEHOLDERS = {"", "()", "(/)"}
 # out of this rule naturally.
 HOME_CITIES = {"Moscow", "Vancouver"}
 
-SEAT_TYPE = {"1": "Window", "2": "Middle", "3": "Aisle"}
 FLIGHT_CLASS = {"1": "Economy", "2": "Premium Economy", "3": "Business", "4": "First", "5": "Private"}
 FLIGHT_REASON = {"1": "Leisure", "2": "Business", "3": "Crew", "4": "Other"}
 
@@ -53,18 +54,14 @@ class Flight:
     airline: str
     aircraft: str
     registration: str
-    seat_number: str
-    seat_type: str
     flight_class: str
     flight_reason: str
     note: str
     trip: int = 0
-    origin_is_stay: bool = True
     destination_is_stay: bool = True
     # True when this flight's origin city differs from the previous flight's
     # destination city — i.e., the user travelled overland between flights.
     origin_is_new: bool = False
-    extras: dict[str, str] = field(default_factory=dict)
 
 
 def _extract_code(cell: str) -> tuple[str, str]:
@@ -140,13 +137,12 @@ def _parse_dt(date: str, time: str) -> datetime | None:
 
 
 def assign_stays(flights: list[Flight], layover_threshold_hours: float = 12) -> None:
-    """Mark each flight's origin/destination as a real stay vs. quick layover.
+    """Mark each flight's destination as a real stay vs. a quick layover.
 
     A stop is a layover when the next flight departs from the same city within
     ``layover_threshold_hours`` of arrival. Otherwise the user actually spent
-    time there. The first/last flight in the chronological sequence keeps the
-    default ``True`` for origin/destination — those are always real stays
-    (home before/after the journey).
+    time there. The last flight in the chronological sequence keeps the default
+    ``True`` — arriving home is always a real stay.
     """
     chrono = sorted(flights, key=lambda f: (f.date, f.dep_time))
     for i in range(len(chrono) - 1):
@@ -165,7 +161,6 @@ def assign_stays(flights: list[Flight], layover_threshold_hours: float = 12) -> 
         gap_hours = (nxt_dep - cur_arr).total_seconds() / 3600
         if 0 <= gap_hours <= layover_threshold_hours:
             cur.destination_is_stay = False
-            nxt.origin_is_stay = False
 
 
 def assign_origin_changes(flights: list[Flight]) -> None:
@@ -211,15 +206,9 @@ def parse_flights(csv_path: Path, airports: dict[str, Airport]) -> list[Flight]:
                 f.seek(pos)
                 break
         reader = csv.DictReader(f)
-        known_keys = {
-            "Date", "Flight number", "From", "To", "Dep time", "Arr time",
-            "Duration", "Airline", "Aircraft", "Registration", "Seat number",
-            "Seat type", "Flight class", "Flight reason", "Note",
-        }
         for row in reader:
             origin_code, origin_raw = _extract_code(_get(row, "From"))
             dest_code, dest_raw = _extract_code(_get(row, "To"))
-            extras = {k: v for k, v in row.items() if k and k not in known_keys and v}
             flights.append(Flight(
                 date=_get(row, "Date"),
                 flight_number=_get(row, "Flight number"),
@@ -235,11 +224,8 @@ def parse_flights(csv_path: Path, airports: dict[str, Airport]) -> list[Flight]:
                 airline=_strip_codes(_get(row, "Airline")),
                 aircraft=_strip_codes(_get(row, "Aircraft")),
                 registration=_get(row, "Registration"),
-                seat_number=_get(row, "Seat number"),
-                seat_type=_decode_enum(_get(row, "Seat type"), SEAT_TYPE),
                 flight_class=_decode_enum(_get(row, "Flight class"), FLIGHT_CLASS),
                 flight_reason=_decode_enum(_get(row, "Flight reason"), FLIGHT_REASON),
                 note=_get(row, "Note"),
-                extras=extras,
             ))
     return flights

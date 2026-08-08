@@ -67,30 +67,28 @@ Workspace management utilities for Notion using the internal API (token_v2 cooki
 
 **CLI:**
 
+Every subcommand that talks to Notion needs the credential, so run it through Doppler:
+
 ```bash
-notion clear-trash           # permanently delete all trashed pages
-notion clear-teamspace       # interactively select and delete a teamspace
-notion md-size-report        # analyze Evernote markdown exports by size
-notion optimize-images <url> # download, convert (WebP/AVIF), re-upload, and consolidate images
-                             # in an embedded sub-collection into its Picture property
+doppler run -- notion clear-trash           # permanently delete all trashed pages
+doppler run -- notion clear-teamspace       # interactively select and delete a teamspace
+doppler run -- notion optimize-images <url> # download, convert (WebP/AVIF), re-upload, and consolidate
+                                            # images in an embedded sub-collection into its Picture property
 ```
 
-**Config:**
+**Credentials:** the `token_v2` cookie lives in Doppler (project `toolbox`, config `dev`, key `NOTION_TOKEN_V2`) — never on disk. `create_client()` reads it from the environment and has no config-file fallback, so a bare invocation fails with instructions rather than quietly using a stale local copy. `doppler.yaml` is committed, so a new machine needs only:
 
-`tools/notion/config/config.json`
-
-```json
-{
-  "notion_token_v2": "your_token_v2_from_browser_cookies",
-  "md_size_report": {
-    "notebook_dir": "/path/to/evernote/md/notebook",
-    "resources_dir": "/path/to/evernote/md/_resources",
-    "output_csv": "/path/to/output.csv"
-  }
-}
+```bash
+doppler login && doppler setup
 ```
 
-The `notion_token_v2` value can be obtained from browser cookies at notion.so. The `md_size_report` section is only needed for the `md-size-report` subcommand.
+To set or rotate the token, grab `token_v2` from your browser cookies and run this **in a normal terminal** (not through Claude, which would record the value):
+
+```bash
+doppler secrets set NOTION_TOKEN_V2="{{token-v2-from-browser-cookies}}" -p toolbox -c dev --silent
+```
+
+**Config:** none. The Doppler-held token is the only input.
 
 > **Warning:** `clear-trash` and `clear-teamspace` perform irreversible bulk deletions. They ask for confirmation before proceeding.
 
@@ -113,24 +111,32 @@ Accepts files or directories; recognizes JPG, PNG, HEIC/HEIF, BMP, TIFF, WebP, A
 
 Imports your personal Flightradar24 logbook into a Notion database. Reads a FR24 CSV export, enriches each flight with airport/city/country metadata from [OurAirports](https://ourairports.com/), groups flights into trips (one trip = chronologically-contiguous flights starting and ending at a home city), and creates a Notion database with two pre-configured views (Full and Compact), trip-based row banding via Notion's conditional-color rules, and chronological sort.
 
-**CLI:**
+This one ships as the **`flightradar24` skill** rather than a registered CLI, because keeping the logbook current is a procedure rather than a single command — it also has to fetch a fresh export from a logged-in browser session and verify the export is purely additive before touching Notion. The scripts live in `.claude/skills/flightradar24/scripts/`; only the gitignored data cache stays under `tools/flightradar/data/`.
+
+**Usage:** run `/flightradar24`, or just ask to update the FlightRadar24 Notion page.
+
+**Scripts** (run from the repo root):
 
 ```bash
-flightradar <notion-page-url>                 # imports tools/flightradar/data/flights.csv
-flightradar <notion-page-url> --csv path.csv  # specify a CSV explicitly
+S=.claude/skills/flightradar24/scripts
+doppler run -- python $S/main.py sync <page-url> --dry-run       # what would be added
+doppler run -- python $S/main.py sync <page-url>                 # append missing flights
+doppler run -- python $S/main.py create <page-url>               # first-time import
+doppler run -- python $S/reconcile.py <page-url> --snapshot s.json  # before syncing
+doppler run -- python $S/reconcile.py <page-url> --against  s.json  # after syncing
+doppler run -- python $S/verify.py <page-url>                    # readable state dump
+python $S/csv_hash.py                                            # local only — fingerprint the CSV
 ```
 
-Workflow:
+`sync` appends in place, which preserves view tweaks made in Notion's UI; `create` builds the database from scratch and is first-import only. Both default to `tools/flightradar/data/flights.csv` and accept `--csv`.
 
-1. Export your logbook at `my.flightradar24.com/settings/export` and save the CSV
-2. Place it at `tools/flightradar/data/flights.csv` (default path; gitignored)
-3. Run `flightradar <parent-page-url>` — creates a "Flights" database under that page
+`reconcile.py` is the safety net, and exits non-zero on any problem. Snapshotted before a sync and compared after, it proves every pre-existing row survived untouched and that both views' column layout, colour rules and group entries only gained entries. It independently reconciles every live row against the value recomputed from the full CSV — which catches the opposite failure, a row that *should* have changed but didn't, since trips renumber when a flight is back-filled mid-history and a new flight can flip the previous one's layover flag.
 
-The importer uses the same Notion credentials as the Notion Tools (token_v2 cookie auth in `tools/notion/config/config.json`).
+**Config:** None of its own. Uses the same Doppler-held `NOTION_TOKEN_V2` as the Notion Tools, so every command above runs under `doppler run --`.
 
-**Config:** None of its own. Reuses `tools/notion/config/config.json` for Notion auth.
+`csv_hash.py` fingerprints `tools/flightradar/data/flights.csv` (row count, djb2 hash, character count) so it can be proved identical to a live FR24 export — both before appending and, crucially, again afterwards. That local CSV is what the sync diff and `reconcile.py` both trust, so nothing else guarantees it stayed faithful.
 
-See `tools/flightradar/docs/learnings/fr24-csv-quirks.md` for the FR24 CSV format details and `tools/flightradar/API_RESEARCH.md` for why CSV is the only sanctioned interface.
+See `.claude/skills/flightradar24/references/` for the CSV format quirks, the browser-session export recipe, and the Notion database's formatting rules.
 
 ### AutoHotkey Scripts
 

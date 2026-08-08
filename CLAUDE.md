@@ -74,10 +74,51 @@ Standalone AHK scripts belong in `tools/ahk/scripts/`. Tool-specific AHK helpers
 
 For AHK conventions, taskbar-hiding patterns, folder-watch snippets, and the Windows auto-start shortcut recipe, see the global learnings file at `~/.claude/learnings/autohotkey.md`.
 
+## Flightradar24 Skill
+
+The Flightradar24 → Notion importer is a **skill**, not a tool under `tools/`:
+
+```
+.claude/skills/flightradar24/
+├── SKILL.md
+├── scripts/          # main.py, sync.py, flights.py, notion_db.py, airports.py,
+│                     # row_props.py, csv_hash.py, verify.py,
+│                     # reconcile.py (append-only + CSV drift check)
+└── references/
+
+tools/flightradar/
+└── data/             # gitignored CSV + OurAirports cache — the only thing left here
+```
+
+Keeping the logbook current is a procedure, not a single command: it fetches a fresh export from a
+logged-in browser session, proves the export is purely additive, appends, then verifies. That sequence
+belongs in a SKILL.md, so the code moved next to it and the `flightradar` console script and package
+entry were removed from `pyproject.toml`.
+
+Consequences worth remembering before "fixing" this layout back:
+
+- The scripts are **not** an installed package. Sibling modules import by bare name (`from flights
+  import ...`), which works because Python puts the script's own directory first on `sys.path`. Only
+  `notion_tools` comes from the installed toolbox package.
+- Run them by path from the repo root: `python .claude/skills/flightradar24/scripts/main.py sync <url>`.
+- `main.py` resolves the data cache via `Path(__file__).resolve().parents[4]`, so moving the scripts
+  to a different depth breaks the CSV and airports paths.
+
 ## Notion API
 
 The notion tool uses Notion's undocumented internal API (v3), not the official REST API. See `tools/notion/docs/learnings/notion-api-quirks.md` for known gotchas (search result caps, response format quirks, archive vs trash semantics).
 
-## Browser Profiles
+## Secrets
 
-Tools that automate websites store browser profiles under `.browser_profiles/<site>/` at the project root (e.g., `.browser_profiles/facebook/`). Multiple tools targeting the same site share one login session. This directory is gitignored.
+The Notion `token_v2` cookie lives in **Doppler** (project `toolbox`, config `dev`, key `NOTION_TOKEN_V2`), not on disk. Anything that reaches Notion runs under `doppler run -- <command>`; `create_client()` reads the environment variable and has **no config-file fallback**, so a bare invocation fails with instructions instead of silently using a stale local token. A committed `doppler.yaml` pins project and config, so a fresh machine only needs `doppler login && doppler setup`.
+
+Per-tool `config/config.json` files still exist for **non-secret** local settings (e.g. `fb_strikethrough`'s). The notion tool has none — the Doppler-held token is its only input. Never put a credential back in one.
+
+## Browser Automation
+
+Two patterns, chosen by **who owns the login session** — not by convenience:
+
+- **Playwright with a stored profile** — the tool drives its own browser and keeps the session under `.browser_profiles/<site>/` at the project root (e.g. `.browser_profiles/facebook/`). Tools targeting the same site share one login. Gitignored. Use this whenever the workflow must run unattended, because the tool has to be able to authenticate on its own.
+- **Claude in Chrome, driving the user's signed-in browser** — no stored profile at all: the session already exists in the user's Chrome and the extension acts inside it. Use this for interactive, skill-driven work where the login already exists and reproducing it headlessly would be the hard part. The `flightradar24` skill works this way to pull the FR24 export, which is why there is no `.browser_profiles/flightradar/`.
+
+If a workflow needs to run without the user present, it needs its own profile under `.browser_profiles/`.
