@@ -4,14 +4,12 @@ import sys
 
 from .clear_teamspace import main as clear_teamspace_main
 from .clear_trash import main as clear_trash_main
-from .md_size_report import main as md_size_report_main
 from .optimize_images import main as optimize_images_main
 
 
 COMMANDS = {
     "clear-trash": clear_trash_main,
     "clear-teamspace": clear_teamspace_main,
-    "md-size-report": md_size_report_main,
     "optimize-images": optimize_images_main,
 }
 
