@@ -25,6 +25,7 @@ import requests
 from image_opt.main import FORMAT_INFO as _IMAGE_OPT_FORMATS, convert_image
 
 from .client import NotionClient, create_client
+from .page_ids import parse_page_id
 
 
 @dataclass
@@ -45,18 +46,6 @@ class ImageSource:
     body_block_id: Optional[str]
     attachment_url: str
     filename: str
-
-
-def parse_page_id(value: str) -> str:
-    """Accept a Notion URL or raw 32-hex / dashed UUID, return dashed UUID."""
-    candidate = value.strip()
-    if "://" in candidate:
-        path = urllib.parse.urlparse(candidate).path
-        candidate = path.rsplit("/", 1)[-1].rsplit("-", 1)[-1]
-    candidate = candidate.replace("-", "")
-    if len(candidate) != 32:
-        raise SystemExit(f"Could not parse page id from: {value}")
-    return f"{candidate[0:8]}-{candidate[8:12]}-{candidate[12:16]}-{candidate[16:20]}-{candidate[20:32]}"
 
 
 def resolve_collection_context(client: NotionClient, host_page_id: str) -> CollectionContext:

@@ -27,7 +27,8 @@ from pathlib import Path
 
 from image_opt.main import convert_image
 from notion_tools.client import NotionClient, create_client
-from notion_tools.optimize_images import parse_page_id, upload_image
+from notion_tools.optimize_images import upload_image
+from notion_tools.page_ids import parse_page_id
 
 PICT_KEY = "pict"
 

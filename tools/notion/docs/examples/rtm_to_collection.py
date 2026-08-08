@@ -30,6 +30,7 @@ import uuid
 from pathlib import Path
 
 from notion_tools.client import NotionClient, create_client
+from notion_tools.page_ids import parse_page_id
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from rtm_transform import load_records, summarize          # noqa: E402
@@ -408,16 +409,6 @@ def load_state() -> dict:
 
 def save_state(state: dict) -> None:
     json.dump(state, open(_state_path, "w", encoding="utf-8"), indent=1)
-
-
-def parse_page_id(value: str) -> str:
-    """Accept a Notion URL or a bare id; return the dashed 36-char form."""
-    tail = value.rstrip("/").split("/")[-1].split("?")[0]
-    raw = tail.split("-")[-1] if "-" in tail and len(tail.split("-")[-1]) == 32 else tail
-    raw = raw.replace("-", "")
-    if len(raw) != 32:
-        raise SystemExit(f"Cannot read a page id out of {value!r}")
-    return f"{raw[:8]}-{raw[8:12]}-{raw[12:16]}-{raw[16:20]}-{raw[20:]}"
 
 
 def main() -> int:
