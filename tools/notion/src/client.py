@@ -1,12 +1,17 @@
-"""Shared Notion API client using token_v2 cookie authentication."""
+"""Shared Notion API client using token_v2 cookie authentication.
 
-import json
-from pathlib import Path
+The token comes from the ``NOTION_TOKEN_V2`` environment variable, supplied by
+Doppler (project ``toolbox``, config ``dev``) — so anything touching Notion runs
+under ``doppler run -- …``. There is deliberately no on-disk fallback: a second
+copy in a config file is exactly the per-machine drift Doppler prevents, and it
+would put a live credential back in plaintext.
+"""
+
+import os
 
 import requests
 
-TOOL_DIR = Path(__file__).resolve().parent.parent
-CONFIG_PATH = TOOL_DIR / "config" / "config.json"
+TOKEN_ENV = "NOTION_TOKEN_V2"
 
 
 class NotionClient:
@@ -25,14 +30,14 @@ class NotionClient:
 
 
 def create_client() -> NotionClient:
-    """Create a NotionClient from config.json."""
-    if not CONFIG_PATH.exists():
-        raise SystemExit(f"Config not found: {CONFIG_PATH}\nCreate it with: {{\"notion_token_v2\": \"your_token\"}}")
-    with open(CONFIG_PATH) as f:
-        cfg = json.load(f)
-    token = cfg.get("notion_token_v2")
+    """Create a NotionClient from the ``NOTION_TOKEN_V2`` environment variable."""
+    token = os.environ.get(TOKEN_ENV)
     if not token:
-        raise SystemExit(f"notion_token_v2 not set in {CONFIG_PATH}")
+        raise SystemExit(
+            f"{TOKEN_ENV} is not set — Notion credentials live in Doppler.\n"
+            f"Run the command through Doppler:  doppler run -- <command>\n"
+            f"First time on this machine:       doppler login && doppler setup"
+        )
     return NotionClient(token)
 
 

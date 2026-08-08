@@ -1,6 +1,4 @@
-import json
-import tempfile
-from pathlib import Path
+import os
 from unittest.mock import patch
 
 from notion_tools.client import NotionClient, create_client
@@ -30,37 +28,19 @@ def test_client_post_absolute_endpoint(requests_mock):
     assert resp.json() == {"results": []}
 
 
-def test_create_client_missing_config():
-    with patch("notion_tools.client.CONFIG_PATH", Path("/nonexistent/config.json")):
+def test_create_client_reads_env():
+    with patch.dict(os.environ, {"NOTION_TOKEN_V2": "test_token"}):
+        client = create_client()
+        assert client.session.cookies.get("token_v2") == "test_token"
+
+
+def test_create_client_missing_token_points_at_doppler():
+    # clear=True so this still exercises the missing-token path when pytest
+    # itself is run under `doppler run --`, which would otherwise supply it.
+    with patch.dict(os.environ, {}, clear=True):
         try:
             create_client()
             assert False, "Expected SystemExit"
         except SystemExit as e:
-            assert "Config not found" in str(e)
-
-
-def test_create_client_missing_token():
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-        json.dump({}, f)
-        config_path = Path(f.name)
-    try:
-        with patch("notion_tools.client.CONFIG_PATH", config_path):
-            try:
-                create_client()
-                assert False, "Expected SystemExit"
-            except SystemExit as e:
-                assert "notion_token_v2 not set" in str(e)
-    finally:
-        config_path.unlink(missing_ok=True)
-
-
-def test_create_client_success():
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-        json.dump({"notion_token_v2": "test_token"}, f)
-        config_path = Path(f.name)
-    try:
-        with patch("notion_tools.client.CONFIG_PATH", config_path):
-            client = create_client()
-            assert client.session.cookies.get("token_v2") == "test_token"
-    finally:
-        config_path.unlink(missing_ok=True)
+            assert "NOTION_TOKEN_V2" in str(e)
+            assert "doppler run" in str(e)
