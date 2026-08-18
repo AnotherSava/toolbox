@@ -2,8 +2,13 @@
 
 The Notion MCP plugin can query, update page properties, and add/drop columns — but it **cannot recolor or remove
 existing select options, set a date format, or trash a database row**. Use the toolbox `notion_tools` v3 client
-(internal `token_v2` API, config in `tools/notion/config/config.json`, gitignored). Run from the toolbox repo root
-so `notion_tools` is importable. Always use a heredoc, never `python -c`.
+(internal `token_v2` API; the token lives in Doppler, project `toolbox`, config `dev`, key `NOTION_TOKEN_V2` — there
+is no config file). Run everything under `doppler run --` from the toolbox repo root so `notion_tools` is importable
+and Doppler is bound. Always use a heredoc, never `python -c`.
+
+The recipes below are the conventions-table instances of general techniques. For the technique itself — the full
+MCP-vs-v3 decision table, response shapes, view formatting and file upload — see the global `notion` skill
+(`~/.claude/skills/notion/`).
 
 Constants:
 - collection id: `4a9aa87c-c7e3-4e36-baf3-a9a9fbcfece4`
@@ -16,7 +21,7 @@ new ones), and `set` the whole `options` array. Cells keep their value as long a
 Notion colors: `default, gray, brown, orange, yellow, green, blue, purple, pink, red`.
 
 ```bash
-python <<'EOF'
+PYTHONIOENCODING=utf-8 doppler run -- python <<'EOF'
 import uuid
 from notion_tools.client import create_client
 c = create_client()
@@ -57,15 +62,15 @@ Notion honors custom `date_format` tokens. The table uses **`MMM d`** ("Jul 25" 
 `MM/DD/YYYY`, `YYYY/MM/DD`, and `relative` also work.
 
 ```bash
-python <<'EOF'
+PYTHONIOENCODING=utf-8 doppler run -- python <<'EOF'
 import uuid
 from notion_tools.client import create_client
 c = create_client()
 COLL, SPACE = "4a9aa87c-c7e3-4e36-baf3-a9a9fbcfece4", "0b9a0494-0efd-81e7-8eab-00038a20f15d"
 r = c.post("syncRecordValues", {"requests":[{"pointer":{"table":"collection","id":COLL},"version":-1}]}).json()
 schema = r["recordMap"]["collection"][COLL]["value"]["value"]["schema"]
-ops = [{"id":COLL,"table":"collection","path":["schema",k,"date_format"],"command":"set","args":"ll"}
-       for k,v in schema.items() if v.get("type")=="date"]   # change "ll" to "MMM d" etc.
+ops = [{"id":COLL,"table":"collection","path":["schema",k,"date_format"],"command":"set","args":"MMM d"}
+       for k,v in schema.items() if v.get("type")=="date"]   # never "ll"/"LL" — accepted, then ignored
 c.post("saveTransactionsFanout", {"requestId":str(uuid.uuid4()),
     "transactions":[{"id":str(uuid.uuid4()),"spaceId":SPACE,"debug":{"userAction":"date_fmt"},"operations":ops}]}).raise_for_status()
 EOF
@@ -77,7 +82,7 @@ MCP can't attach reminders. Set the date property value to the mention form with
 date prop id from the schema (find by name). Reminder shape for an all-day date: `{"unit":"day"|"week","value":N,"time":"HH:MM"}`.
 
 ```bash
-python <<'EOF'
+PYTHONIOENCODING=utf-8 doppler run -- python <<'EOF'
 import uuid
 from notion_tools.client import create_client
 c = create_client()
@@ -98,7 +103,7 @@ EOF
 Set the page block's `alive` to false. **Confirm with the user first** — this removes the row.
 
 ```bash
-python <<'EOF'
+PYTHONIOENCODING=utf-8 doppler run -- python <<'EOF'
 import uuid
 from notion_tools.client import create_client
 c = create_client()

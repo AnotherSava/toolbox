@@ -1,5 +1,8 @@
 # The Flights Notion database
 
+This file covers *this* database. For the general Notion technique behind it — the MCP-vs-v3 decision
+table, response shapes, view formatting, batching — see the global `notion` skill (`~/.claude/skills/notion/`).
+
 ## Coordinates
 
 The host page URL is the **only** identifier that is stored, and it lives in `SKILL.md` — deliberately

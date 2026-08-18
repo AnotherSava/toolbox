@@ -1,10 +1,18 @@
 # Notion Internal API Quirks
 
-Notion internal API (token_v2 cookie auth, /api/v3/ endpoints) has several quirks discovered during development:
+Notion internal API (token_v2 cookie auth, /api/v3/ endpoints) has several quirks discovered during development.
+
+The operational side of this — when to use v3 at all versus the MCP integration, how to run a call from
+any project, and the copy-paste recipes — lives in the global `notion` skill (`~/.claude/skills/notion/`).
+This file stays the raw finding log.
 
 - **Search API has a hard 1000-result limit.** Pagination tokens cycle and return duplicates rather than advancing. Workaround: delete results in batches (fetch 1000, delete, re-fetch until empty).
 
-- **`getTeams` response format.** Teamspaces are nested under `recordMap.team`, not returned as a flat list.
+- **`getTeams` is retired — it answers `404`.** Verified 2026-08-16: `POST /api/v3/getTeams` returns an HTML 404 page, so `.json()` raises `JSONDecodeError` rather than anything that names the real problem. Teamspaces are now only reachable through the MCP integration's `notion-get-teams`. (When it worked, teamspaces were nested under `recordMap.team`, not returned as a flat list.) The same is true of `submitTransaction`; `saveTransactionsFanout` replaced it.
+
+- **Records arrive inside a permission envelope.** A `recordMap` entry is `{"value": {"role": ..., "value": {...the record...}}}`, but some responses put the record directly under `value`. Reading one level too few raises `KeyError` on every field — this is what broke `get_spaces()` and with it `notion clear-trash`. Use `notion_tools.client.unwrap_record`, which accepts either shape.
+
+- **`queryCollection`'s loader requires `searchQuery` and `userTimeZone`.** Omit either and the call fails with the same contentless `400 {"name":"ValidationError","debugMessage":"Invalid input."}` that a wrong view id produces, so the error misdirects you. Both calling conventions work otherwise — `{collection:{id}, collectionView:{id}}` reducing to `collection_group_results`, and `{collectionId, collectionViewId, query, source}` reducing to `results`.
 
 - **Archived vs. trashed pages are fundamentally different.** Trash is global and searchable via `isDeletedOnly` filter. Archives are per-parent page with no global "all archived" view — there's no API to list all archived pages across a workspace.
 
@@ -73,5 +81,5 @@ When modifying or extending the notion tool's API calls, don't assume standard R
 
 ## Related reading
 
-- **[`jamalex/notion-py`](https://github.com/jamalex/notion-py)** — the most complete public Python client for Notion's internal v3 API. Uses `token_v2` cookie auth (same surface as this tool). Wraps blocks, collections, views, and transactions in Python classes; auto-generates row attributes from collection schemas. Its own `CLAUDE.md` is a good architectural reference. **Limitation:** the library is built around older endpoints (`submitTransaction` instead of `saveTransactionsFanout`, `query.group_by` instead of `query2.group_by`) and does NOT cover the post-2022 view-format fields documented above (`conditional_color_rules`, `collection_groups`, `block_color`, schema-level `date_format`, etc.). Use it for the well-trodden parts of v3; fall back to raw HTTP + this quirks file for the bleeding-edge view config.
+- **[`jamalex/notion-py`](https://github.com/jamalex/notion-py)** — the most complete public Python client for Notion's internal v3 API. Uses `token_v2` cookie auth (same surface as this tool). Wraps blocks, collections, views, and transactions in Python classes; auto-generates row attributes from collection schemas. Its own `CLAUDE.md` is a good architectural reference. **Limitation:** the library is built around older endpoints (`submitTransaction` instead of `saveTransactionsFanout`, `query.group_by` instead of `query2.group_by`) and does NOT cover the post-2022 view-format fields documented above (`conditional_color_rules`, `collection_groups`, `block_color`, schema-level `date_format`, etc.). **Its write path no longer works at all** — `submitTransaction` was verified dead (HTTP 404) on 2026-08-16. Read it for architecture; write through `saveTransactionsFanout` yourself.
 - **[`Notion MCP server`](https://mcp.notion.com/mcp)** — Notion's official API path (OAuth + REST). Separate surface, separate constraints. None of the quirks here apply there; many of the things this tool does (multi-view DB construction, conditional row colors, bulk teamspace deletion) aren't exposed via the MCP server.

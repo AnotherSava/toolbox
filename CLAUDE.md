@@ -106,7 +106,7 @@ Consequences worth remembering before "fixing" this layout back:
 
 ## Notion API
 
-The notion tool uses Notion's undocumented internal API (v3), not the official REST API. See `tools/notion/docs/learnings/notion-api-quirks.md` for known gotchas (search result caps, response format quirks, archive vs trash semantics).
+The notion tool uses Notion's undocumented internal API (v3), not the official REST API. For when to reach for v3 versus the Notion MCP integration, and the copy-paste recipes, see the global `notion` skill; `tools/notion/docs/learnings/notion-api-quirks.md` is the raw finding log behind it (search result caps, response format quirks, archive vs trash semantics).
 
 ## Secrets
 
