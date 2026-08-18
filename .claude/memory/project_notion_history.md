@@ -20,8 +20,10 @@ The notion tool was originally its own standalone repo. It evolved through 5 Cla
    - Simplified UX after user pushed back on double confirmation prompts
    - Created 3 commits (refactor, feat, docs)
 
-5. **Merged into toolbox (Apr 3, 2026):** All scripts moved to `tools/notion/` in the toolbox monorepo. Auth switched from dotenv/.env to config.json. Package registered as `notion_tools`.
+5. **Merged into toolbox (Apr 3, 2026):** All scripts moved to `tools/notion/` in the toolbox monorepo. Auth switched from dotenv/.env to config.json, and later to Doppler. Package registered as `notion_tools`.
+
+6. **`clear-teamspace` removed (Aug 16, 2026):** Notion retired the v3 `getTeams` endpoint — it now answers 404 — so the subcommand could no longer list teamspaces to delete from. Teamspaces are reachable only through the Notion MCP integration's `notion-get-teams`.
 
 **Why:** Context for understanding design decisions in the notion tool code.
 
-**How to apply:** Reference when extending the notion tool or understanding why certain patterns exist (e.g., the delete-and-refetch loop in clear_teamspace).
+**How to apply:** Reference when extending the notion tool or understanding why certain patterns exist (e.g., the delete-and-refetch loop that survives in `clear_trash`).

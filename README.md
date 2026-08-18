@@ -71,7 +71,6 @@ Every subcommand that talks to Notion needs the credential, so run it through Do
 
 ```bash
 doppler run -- notion clear-trash           # permanently delete all trashed pages
-doppler run -- notion clear-teamspace       # interactively select and delete a teamspace
 doppler run -- notion optimize-images <url> # download, convert (WebP/AVIF), re-upload, and consolidate
                                             # images in an embedded sub-collection into its Picture property
 ```
@@ -90,7 +89,7 @@ doppler secrets set NOTION_TOKEN_V2="{{token-v2-from-browser-cookies}}" -p toolb
 
 **Config:** none. The Doppler-held token is the only input.
 
-> **Warning:** `clear-trash` and `clear-teamspace` perform irreversible bulk deletions. They ask for confirmation before proceeding.
+> **Warning:** `clear-trash` performs an irreversible bulk deletion. It asks for confirmation before proceeding.
 
 ### Image Optimizer
 
