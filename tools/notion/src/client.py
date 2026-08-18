@@ -41,6 +41,19 @@ def create_client() -> NotionClient:
     return NotionClient(token)
 
 
+def unwrap_record(entry: dict) -> dict:
+    """Return the actual record from a ``recordMap`` entry.
+
+    Notion wraps records in a permission envelope — ``{"value": {"role": ...,
+    "value": {...the record...}}}`` — but older responses put the record directly
+    under ``value``. Reading one level too few yields a ``KeyError`` on every
+    field, so accept both shapes.
+    """
+    value = entry.get("value", entry)
+    inner = value.get("value")
+    return inner if isinstance(inner, dict) else value
+
+
 def get_spaces(client: NotionClient) -> dict[str, str]:
     """Retrieve all workspaces accessible to the user.
 
@@ -51,4 +64,4 @@ def get_spaces(client: NotionClient) -> dict[str, str]:
     if "recordMap" not in response:
         raise SystemExit(f"Auth error: {response}")
     spaces = response["recordMap"]["space"]
-    return {space_id: data["value"]["name"] for space_id, data in spaces.items()}
+    return {space_id: unwrap_record(data)["name"] for space_id, data in spaces.items()}
