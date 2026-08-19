@@ -1,4 +1,3 @@
-- [feedback_git_diff.md](feedback_git_diff.md) — Always diff against HEAD when planning commits, not staged vs unstaged
 - [feedback_one_off_scripts_as_examples.md](feedback_one_off_scripts_as_examples.md) — Ad-hoc workflow scripts go in `tools/<tool>/docs/examples/`, not registered as subcommands
 - [project_notion_history.md](project_notion_history.md) — Notion tool origin: 5 sessions Jan-Mar 2026, migrated from standalone repo Apr 2026
 - [project_notion_image_format.md](project_notion_image_format.md) — Use WebP for Notion-bound images; AVIF doesn't preview in gallery/card views
