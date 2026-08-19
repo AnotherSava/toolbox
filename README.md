@@ -10,7 +10,7 @@ A collection of small tools for day-to-day life.
 git clone <repo-url> && cd toolbox
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[browser,test]"
+pip install -e ".[browser,contacts,test]"
 playwright install chromium
 ```
 
@@ -20,7 +20,7 @@ playwright install chromium
 git clone <repo-url>; cd toolbox
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -e ".[browser,test]"
+pip install -e ".[browser,contacts,test]"
 playwright install chromium
 ```
 
@@ -30,7 +30,7 @@ playwright install chromium
 git clone <repo-url> & cd toolbox
 python -m venv .venv
 .venv\Scripts\activate.bat
-pip install -e ".[browser,test]"
+pip install -e ".[browser,contacts,test]"
 playwright install chromium
 ```
 
@@ -136,6 +136,26 @@ python $S/csv_hash.py                                            # local only �
 `csv_hash.py` fingerprints `tools/flightradar/data/flights.csv` (row count, djb2 hash, character count) so it can be proved identical to a live FR24 export — both before appending and, crucially, again afterwards. That local CSV is what the sync diff and `reconcile.py` both trust, so nothing else guarantees it stayed faithful.
 
 See `.claude/skills/flightradar24/references/` for the CSV format quirks, the browser-session export recipe, and the Notion database's formatting rules.
+
+### Google Contacts
+
+Reads a Google account's contacts through the official [People API](https://developers.google.com/people). It tags each contact group as user-created or system-managed, so "which contacts have no label?" is an exact query rather than a guess at which names are system ones. It also reaches the auto-collected "Other contacts" bucket, which the Contacts web UI has no way to export.
+
+**CLI:**
+
+```bash
+doppler run -- contacts labels      # contact count per label
+doppler run -- contacts unlabeled   # contacts carrying no label
+doppler run -- contacts show        # every contact with its labels
+doppler run -- contacts other       # auto-collected "Other contacts"
+doppler run -- contacts authorize   # one-time OAuth consent
+```
+
+Every report accepts `--json`. Read-only by design: the tool requests only `contacts.readonly` and `contacts.other.readonly`, so it cannot modify or delete a contact.
+
+**Credentials:** two Doppler keys (project `toolbox`, config `dev`) — `GOOGLE_OAUTH_CLIENT_JSON` (the Desktop OAuth client downloaded from the Google Cloud Console) and `GOOGLE_CONTACTS_REFRESH_TOKEN` (minted by `contacts authorize`, which pipes it into Doppler over stdin rather than printing it). Creating the OAuth client is a one-time Console step — see `tools/contacts/docs/setup.md`.
+
+**Config:** none. The Doppler-held credentials are the only input.
 
 ### AutoHotkey Scripts
 

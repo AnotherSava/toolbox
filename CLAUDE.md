@@ -56,7 +56,7 @@ Extract reusable primitives into their own tool (e.g., `image_opt`) so each exam
 ## Commands
 
 - Run tests: `pytest`
-- Install for development: `pip install -e ".[browser,test]"`
+- Install for development: `pip install -e ".[browser,contacts,test]"`
 
 ## AutoHotkey Tool
 
@@ -108,11 +108,26 @@ Consequences worth remembering before "fixing" this layout back:
 
 The notion tool uses Notion's undocumented internal API (v3), not the official REST API. For when to reach for v3 versus the Notion MCP integration, and the copy-paste recipes, see the global `notion` skill; `tools/notion/docs/learnings/notion-api-quirks.md` is the raw finding log behind it (search result caps, response format quirks, archive vs trash semantics).
 
+## Google Contacts
+
+The contacts tool uses the official **People API**, not the Contacts web UI's internal
+`batchexecute` RPC. The RPC route works with zero setup and was how the first pass at
+"which contacts have no label?" got answered, but it is keyed on opaque rpc ids Google
+renames at will, and it cannot read "Other contacts" at all — the export dialog offers no
+scope for them.
+
+What the People API gives that the CSV export does not: `contactGroups.list` tags each label
+`USER_CONTACT_GROUP` or `SYSTEM_CONTACT_GROUP`, so "has no label" is an exact query rather
+than a guess that `* myContacts` and `* starred` are the only system groups. Setup and the
+OAuth reasoning live in `tools/contacts/docs/setup.md`.
+
 ## Secrets
 
 The Notion `token_v2` cookie lives in **Doppler** (project `toolbox`, config `dev`, key `NOTION_TOKEN_V2`), not on disk. Anything that reaches Notion runs under `doppler run -- <command>`; `create_client()` reads the environment variable and has **no config-file fallback**, so a bare invocation fails with instructions instead of silently using a stale local token. A committed `doppler.yaml` pins project and config, so a fresh machine only needs `doppler login && doppler setup`.
 
-Per-tool `config/config.json` files still exist for **non-secret** local settings (e.g. `fb_strikethrough`'s). The notion tool has none — the Doppler-held token is its only input. Never put a credential back in one.
+The contacts tool follows the same rule with two keys: `GOOGLE_OAUTH_CLIENT_JSON` (the Desktop OAuth client downloaded from the Cloud Console) and `GOOGLE_CONTACTS_REFRESH_TOKEN` (minted by `contacts authorize`, which pipes it into Doppler over stdin rather than printing it). See `tools/contacts/docs/setup.md`.
+
+Per-tool `config/config.json` files still exist for **non-secret** local settings (e.g. `fb_strikethrough`'s). The notion and contacts tools have none — their Doppler-held credentials are their only input. Never put a credential back in one.
 
 ## Browser Automation
 
