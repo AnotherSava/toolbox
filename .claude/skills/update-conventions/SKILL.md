@@ -40,10 +40,9 @@ If an ID ever fails, re-locate the database with `notion-search "Conventions"` (
 |---|---|---|
 | `Task` | title | Convention name **only** — no date, no location (those have their own columns). |
 | `Location` | text | `City, ST` (or `City, Country`). |
-| `Start`, `End` | date (`ll` fmt) | The next edition's date range. `ll` renders as the long month ("September 5, 2025") — see date-format note below. |
+| `Start`, `End` | date (`MMM d` fmt) | The next edition's date range. See date-format note below. |
 | `Dates` | select | Only value is `Estimate` (yellow) = projected from the usual weekend. **Blank = confirmed** — organizer-announced dates get no pill (blank is the default). |
-| `Plans` | select | `Considering` (yellow) · `Planned` (blue) · `Ticket` (green). Empty = undecided. The skill only ever sets `Ticket` (from email evidence); it never overwrites a `Plans` value already set by the user by hand. |
-| `Priority` | select | `P1`/`P2`/`P3` (user-owned; don't touch). |
+| `Plans` | select | `Considering` (yellow) · `Planned` (blue) · `Ticket` (green) · `CGE` (purple, = attending as publisher crew, so no badge of one's own). Empty = undecided. The skill only ever sets `Ticket` (from email evidence); it never overwrites a `Plans` value already set by the user by hand. |
 | `Link` | url | Official site / durable registration page. |
 | `Notes` | text | Terse: estimate basis ("Memorial Day weekend"), or hiatus/defunct explanation. |
 | `Conflict` | select | Color-coded date-collision window (see step 4). The user applies Notion conditional row-coloring on this property. |
@@ -56,13 +55,16 @@ For each convention find the **soonest edition whose `End` is on/after today**:
 - If it **already ended before today** → move to next year's edition.
 - Leave `Dates` **blank** when the organizer has officially posted the dates (blank = confirmed, the default).
   Set `Dates = Estimate` only for a projection, with a one-phrase basis in `Notes` (e.g. "Presidents' Day weekend", "2nd weekend of July (low confidence)").
-- Truly dead/hiatused cons: blank `Start`/`End`, explain in `Notes`, leave `Dates` empty.
+- Truly dead cons, or ones on hiatus with no announced return: blank `Start`/`End`, explain in `Notes`, leave `Dates` empty.
+- A con that has **announced a return** but not yet its dates is not hiatused — keep the projected estimate and its
+  basis rather than blanking, so it stays visible on the calendar. (OrcaCon, 2026-09-14: skipped 2027, announced a
+  2028 return, organizer still "exploring dates" — the mid-January estimate stayed.)
 
 ## Procedure
 
 ### 1. Pull current state
 `notion-query-data-sources` (SQL mode) over the collection:
-`SELECT url, "Task", "Location", "date:Start:start" AS start, "date:End:start" AS "end", "Dates", "Plans", "Link", "Notes", "Conflict" FROM "collection://4a9aa87c-c7e3-4e36-baf3-a9a9fbcfece4" ORDER BY "date:Start:start"`
+`SELECT url, "Task", "Location", "date:Start:start" AS start, "date:End:start" AS "end", "Dates", "Plans", "Link", "Notes", "Conflict", "date:Early bird deadline:start" AS early_bird FROM "collection://4a9aa87c-c7e3-4e36-baf3-a9a9fbcfece4" ORDER BY "date:Start:start"`
 
 ### 2. Decide what needs a refresh
 A row needs re-research if **any** holds:
@@ -90,15 +92,23 @@ Search the user's Gmail for ticket/badge confirmations and set `Plans = Ticket`.
 edition YEAR the row now represents** — a ticket for a past edition does not count. Full query set and platform
 list in `references/ticket-sync.md`.
 
-### 6. Early-bird deadlines & reminders
+### 6. Newly-announced conventions
+Steps 3 and 5 both turn up cons that aren't in the table yet — a new show announced from the stage of another
+one, a con someone mentions on a mailing list. List them (name · dates · location · source) and **offer to add
+them**. Don't add one unasked, and don't silently drop it either: a row is cheap and a missed announcement is
+not. Verify the dates across two independent sources first — new-show coverage contradicts itself more often
+than an established con's does.
+
+### 7. Early-bird deadlines & reminders
 For rows **without** a `Ticket`, WebFetch the official registration page / ticketing host (tabletop.events,
 ticketspice, eventbrite, showclix) for the early-bird price deadline of the upcoming edition — never reuse a past
 edition's. Write it to `Early bird deadline`; leave blank if registration isn't open or there's no early-bird tier.
 On `Planned`/`Considering` rows that have a deadline, attach a Notion **"1 week before"** reminder to that date
 (MCP can't set reminders — use the reminder snippet in `references/v3-operations.md`).
 
-### 7. Report
-Summarize the changes (rolled editions, cleared Estimate flags, new/removed conflicts, new tickets, early-bird deadlines).
+### 8. Report
+Summarize the changes (rolled editions, cleared Estimate flags, new/removed conflicts, new tickets, early-bird
+deadlines, conventions added or offered).
 **Confirm before destructive edits** — trashing a defunct convention's row, or blanking dates on a con that
 merely hasn't announced yet.
 
@@ -109,5 +119,5 @@ Notion honors custom `date_format` tokens (set via the collection schema, not MC
 
 ## Out of scope
 - Do NOT re-run or reference the RTM→Notion migration, initial column creation, or title/location cleanup — those were one-time.
-- Do NOT set `Priority`, `Considering`, or `Planned` — those are the user's to manage.
+- Do NOT set `Considering`, `Planned`, or `CGE` — those are the user's to manage. `Ticket` is the only `Plans` value this skill writes.
 - Do NOT commit or push changes to the repo unless explicitly asked.
