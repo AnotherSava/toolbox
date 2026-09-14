@@ -14,8 +14,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 from .client import REFRESH_TOKEN_ENV, SCOPES, load_client_config
 
-DOPPLER_PROJECT = "toolbox"
-DOPPLER_CONFIG = "dev"
+DOPPLER_PROJECT = "local"
+DOPPLER_CONFIG = "dev_toolbox"
 
 
 def _store_in_doppler(refresh_token: str) -> None:

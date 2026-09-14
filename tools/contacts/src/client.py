@@ -1,6 +1,6 @@
 """Google People API client.
 
-Credentials come from Doppler (project ``toolbox``, config ``dev``) as two
+Credentials come from Doppler (project ``local``, config ``dev_toolbox``) as two
 environment variables, so anything touching Contacts runs under
 ``doppler run -- …``. As with the Notion client there is deliberately no on-disk
 fallback — a second copy in a config file is the per-machine drift Doppler

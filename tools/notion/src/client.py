@@ -1,7 +1,7 @@
 """Shared Notion API client using token_v2 cookie authentication.
 
 The token comes from the ``NOTION_TOKEN_V2`` environment variable, supplied by
-Doppler (project ``toolbox``, config ``dev``) — so anything touching Notion runs
+Doppler (project ``local``, config ``dev_toolbox``) — so anything touching Notion runs
 under ``doppler run -- …``. There is deliberately no on-disk fallback: a second
 copy in a config file is exactly the per-machine drift Doppler prevents, and it
 would put a live credential back in plaintext.

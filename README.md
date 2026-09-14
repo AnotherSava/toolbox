@@ -75,7 +75,7 @@ doppler run -- notion optimize-images <url> # download, convert (WebP/AVIF), re-
                                             # images in an embedded sub-collection into its Picture property
 ```
 
-**Credentials:** the `token_v2` cookie lives in Doppler (project `toolbox`, config `dev`, key `NOTION_TOKEN_V2`) — never on disk. `create_client()` reads it from the environment and has no config-file fallback, so a bare invocation fails with instructions rather than quietly using a stale local copy. `doppler.yaml` is committed, so a new machine needs only:
+**Credentials:** the `token_v2` cookie lives in Doppler (project `local`, config `dev_toolbox`, key `NOTION_TOKEN_V2`) — never on disk. `create_client()` reads it from the environment and has no config-file fallback, so a bare invocation fails with instructions rather than quietly using a stale local copy. `doppler.yaml` is committed, so a new machine needs only:
 
 ```bash
 doppler login && doppler setup
@@ -84,7 +84,7 @@ doppler login && doppler setup
 To set or rotate the token, grab `token_v2` from your browser cookies and run this **in a normal terminal** (not through Claude, which would record the value):
 
 ```bash
-doppler secrets set NOTION_TOKEN_V2="{{token-v2-from-browser-cookies}}" -p toolbox -c dev --silent
+doppler secrets set NOTION_TOKEN_V2="{{token-v2-from-browser-cookies}}" -p local -c dev_toolbox --silent
 ```
 
 **Config:** none. The Doppler-held token is the only input.
@@ -137,6 +137,16 @@ python $S/csv_hash.py                                            # local only �
 
 See `.claude/skills/flightradar24/references/` for the CSV format quirks, the browser-session export recipe, and the Notion database's formatting rules.
 
+### Conventions Calendar
+
+Keeps a Notion database of board-game conventions current: rolls finished editions forward to the next year, clears the `Estimate` flag once organizers post firm dates, recomputes the date-conflict colour bands, syncs ticket status from Gmail, and tracks early-bird deadlines.
+
+Like the Flightradar importer this ships as the **`update-conventions` skill** rather than a CLI — it is a procedure that spans web research, Gmail and two Notion APIs, and it pauses for confirmation before destructive edits. Operations the Notion MCP plugin cannot perform (recolouring or removing select options, setting a date format, trashing a row) go through this repo's `notion_tools` v3 client.
+
+**Usage:** run `/update-conventions`, or just ask to refresh the conventions table.
+
+See `.claude/skills/update-conventions/references/` for the v3 snippets, the ticket-sync query set, and the multi-agent date-research recipe.
+
 ### Google Contacts
 
 Reads a Google account's contacts through the official [People API](https://developers.google.com/people). It tags each contact group as user-created or system-managed, so "which contacts have no label?" is an exact query rather than a guess at which names are system ones. It also reaches the auto-collected "Other contacts" bucket, which the Contacts web UI has no way to export.
@@ -153,7 +163,7 @@ doppler run -- contacts authorize   # one-time OAuth consent
 
 Every report accepts `--json`. Read-only by design: the tool requests only `contacts.readonly` and `contacts.other.readonly`, so it cannot modify or delete a contact.
 
-**Credentials:** two Doppler keys (project `toolbox`, config `dev`) — `GOOGLE_OAUTH_CLIENT_JSON` (the Desktop OAuth client downloaded from the Google Cloud Console) and `GOOGLE_CONTACTS_REFRESH_TOKEN` (minted by `contacts authorize`, which pipes it into Doppler over stdin rather than printing it). Creating the OAuth client is a one-time Console step — see `tools/contacts/docs/setup.md`.
+**Credentials:** two Doppler keys (project `local`, config `dev_toolbox`) — `GOOGLE_OAUTH_CLIENT_JSON` (the Desktop OAuth client downloaded from the Google Cloud Console) and `GOOGLE_CONTACTS_REFRESH_TOKEN` (minted by `contacts authorize`, which pipes it into Doppler over stdin rather than printing it). Creating the OAuth client is a one-time Console step — see `tools/contacts/docs/setup.md`.
 
 **Config:** none. The Doppler-held credentials are the only input.
 

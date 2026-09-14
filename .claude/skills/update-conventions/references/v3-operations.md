@@ -2,7 +2,7 @@
 
 The Notion MCP plugin can query, update page properties, and add/drop columns — but it **cannot recolor or remove
 existing select options, set a date format, or trash a database row**. Use the toolbox `notion_tools` v3 client
-(internal `token_v2` API; the token lives in Doppler, project `toolbox`, config `dev`, key `NOTION_TOKEN_V2` — there
+(internal `token_v2` API; the token lives in Doppler, project `local`, config `dev_toolbox`, key `NOTION_TOKEN_V2` — there
 is no config file). Run everything under `doppler run --` from the toolbox repo root so `notion_tools` is importable
 and Doppler is bound. Always use a heredoc, never `python -c`.
 

@@ -123,7 +123,7 @@ OAuth reasoning live in `tools/contacts/docs/setup.md`.
 
 ## Secrets
 
-The Notion `token_v2` cookie lives in **Doppler** (project `toolbox`, config `dev`, key `NOTION_TOKEN_V2`), not on disk. Anything that reaches Notion runs under `doppler run -- <command>`; `create_client()` reads the environment variable and has **no config-file fallback**, so a bare invocation fails with instructions instead of silently using a stale local token. A committed `doppler.yaml` pins project and config, so a fresh machine only needs `doppler login && doppler setup`.
+The Notion `token_v2` cookie lives in **Doppler** (project `local`, config `dev_toolbox`, key `NOTION_TOKEN_V2`), not on disk. Anything that reaches Notion runs under `doppler run -- <command>`; `create_client()` reads the environment variable and has **no config-file fallback**, so a bare invocation fails with instructions instead of silently using a stale local token. A committed `doppler.yaml` pins project and config, so a fresh machine only needs `doppler login && doppler setup`.
 
 The contacts tool follows the same rule with two keys: `GOOGLE_OAUTH_CLIENT_JSON` (the Desktop OAuth client downloaded from the Cloud Console) and `GOOGLE_CONTACTS_REFRESH_TOKEN` (minted by `contacts authorize`, which pipes it into Doppler over stdin rather than printing it). See `tools/contacts/docs/setup.md`.
 

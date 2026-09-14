@@ -37,8 +37,8 @@ recording anywhere. If it ever changes, change it here and nowhere else.
 
 ## Preconditions
 
-If **Notion credentials** is `MISSING`, stop: the token lives in Doppler (project `toolbox`, config
-`dev`, key `NOTION_TOKEN_V2`). On a machine that has never been set up, that is `doppler login` followed
+If **Notion credentials** is `MISSING`, stop: the token lives in Doppler (project `local`, config
+`dev_toolbox`, key `NOTION_TOKEN_V2`). On a machine that has never been set up, that is `doppler login` followed
 by `doppler setup` — `doppler login` needs a real terminal, so ask the user to run it themselves rather
 than trying it here. If **Local CSV fingerprint** is `MISSING`, the history mirror is gone — this becomes
 a first-time import, so ask the user rather than proceeding.
