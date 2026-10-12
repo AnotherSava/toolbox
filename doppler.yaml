@@ -1,3 +1,13 @@
+# Binds this directory to its secrets. `project` is a SHARD, not this app — see below.
+#
+# Doppler's free plan allows 10 projects but 4 environments x 10 configs each, so a project per app
+# spends the one scarce axis and leaves ~400 config slots unused. Apps therefore share a project and get
+# a config apiece: this one lives at local/dev_toolbox. `local` holds workstation-only apps; anything
+# rendered onto the shared VPS goes in its own shard instead.
+#
+# THE ROOT CONFIG (`local/dev`) MUST STAY EMPTY. A branch config inherits its root's secrets INCLUDING
+# VALUES, so a secret left in the root is readable by every app sharing that environment — and a `-c dev`
+# typed where `-c dev_toolbox` was meant writes there silently.
 setup:
   project: local
   config: dev_toolbox
