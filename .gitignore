@@ -1,5 +1,4 @@
-# Ralphex
-.ralphex/
+# Plans
 **/docs/plans/*
 !**/docs/plans/completed/
 !**/docs/plans/draft/
@@ -18,6 +17,7 @@ dist/
 # Tool configs (user-specific)
 **/config/*.json
 **/config/*.env
+!/config/publish.env
 **/config/*.py
 
 # Flightradar data (personal flight history + airport DB cache)
