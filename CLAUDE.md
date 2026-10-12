@@ -34,7 +34,7 @@ tools/<tool_name>/
 
 ## Docs and Plans
 
-Plans and documentation live inside each tool at `tools/<tool_name>/docs/`. This is where `/plan-ralphex` and other skills should create plan files. There is no top-level `docs/` directory — each tool owns its own docs.
+Plans and documentation live inside each tool at `tools/<tool_name>/docs/`. This is where skills should create plan files. There is no top-level `docs/` directory — each tool owns its own docs.
 
 ## Adding a New Tool
 
@@ -64,8 +64,7 @@ The `ahk` tool is a collection of AutoHotkey v2 scripts, not a Python package. I
 
 ```
 tools/ahk/
-├── scripts/          # .ahk source files
-└── docs/
+└── scripts/          # .ahk source files
 ```
 
 No `src/`, `tst/`, or `config/` subdirectories. Not registered in `pyproject.toml`. Scripts run via the AutoHotkey v2 runtime (`AutoHotkey.exe`).
